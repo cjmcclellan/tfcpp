@@ -1,0 +1,39 @@
+FROM nvidia/cuda:11.2.0-cudnn8-devel-ubuntu20.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN echo "Installing dependencies..." && \
+	apt-get -y update && \
+	apt-get install -y build-essential \
+	 cmake \
+	 git \
+	 wget \
+	 software-properties-common \
+	 libatlas-base-dev \
+	 libleveldb-dev \
+	 libsnappy-dev \
+	 libhdf5-serial-dev \
+	 libboost-all-dev \
+	 libgflags-dev \
+	 libgoogle-glog-dev \
+	 liblmdb-dev \
+	 pciutils \
+	 python3-setuptools \
+	 python3-dev \
+	 python3-pip \
+	 opencl-headers \
+	 ocl-icd-opencl-dev \
+	 libviennacl-dev \
+	 libcanberra-gtk-module
+
+# install the matplotlib-cpp library
+RUN apt-get install python-matplotlib && git clone https://github.com/lava/matplotlib-cpp.git
+
+
+# install dependencies for CUSPICE
+RUN apt-get install libx11-dev, libxt-dev, libxaw7-dev
+
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/cuda/include:/usr/local/cuda/nvvm/bin:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/tensorflow/lib:$LD_LIBRARY_PATH
+ENV PATH=$PATh:/usr/local/cuda/nvvm/bin
+
+RUN ldconfig
