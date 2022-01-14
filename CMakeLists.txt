@@ -17,15 +17,17 @@ set_target_properties(multiply PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 # We installed Tensorflow in /opt/tensorflow - change if you installed elsewhere
-set(TENSORFLOW_LIB_DIR "/opt/tensorflow/lib")
+set(TENSORFLOW_LIB_DIR "/home/deepsim/Documents/Tensorflow/tfinstall")
 #set(TENSORFLOW_LIB_DIR "~/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow")
 #
 set(TFLIBS ${TENSORFLOW_LIB_DIR}/libtensorflow_cc.so ${TENSORFLOW_LIB_DIR}/libtensorflow_framework.so)
 #set(TFLIBS )
-#
+
 #add_executable(test src/test/test.cpp)
 add_executable(loadmodels src/loadmodels/loadmodels.cpp)
+add_executable(loadmodels_incuda src/loadmodels/loadmodels_incuda.cpp)
 add_executable(tfcuda_test src/tfcuda/tfcuda_test_own.cpp)
+#add_executable(tftest src/tfcuda/tftest.cpp)
 add_executable(tfcuda_test_cpu src/tfcuda/tfcuda_test_own_cpustage.cpp)
 add_executable(tfcuda_test_matrix src/tfcuda/tfcuda_test_matrix.cpp)
 add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.cpp)
@@ -38,9 +40,14 @@ add_executable(testmat src/tfcuda/testmat.cu)
 #
 target_include_directories(loadmodels PRIVATE ${TENSORFLOW_LIB_DIR}/include)
 target_include_directories(loadmodels PRIVATE ${CUDA_INCLUDE_DIRS})
+
+target_include_directories(loadmodels_incuda PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
+target_link_libraries(loadmodels_incuda PRIVATE ${TFLIBS} multiply)
 #
 target_include_directories(tfcuda_test  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(tfcuda_test ${TFLIBS} multiply)
+#target_include_directories(tftest  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+#target_link_libraries(tftest ${TFLIBS})
 target_include_directories(tfcuda_test_cpu  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(tfcuda_test_cpu ${TFLIBS} multiply)
 target_include_directories(tfcuda_test_matrix PRIVATE ${TENSORFLOW_LIB_DIR}/include)

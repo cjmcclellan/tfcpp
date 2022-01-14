@@ -74,7 +74,8 @@ int main(int argc, char **argv) {
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6dummy/tfmodel";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6con/tfmodel";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6conbatch/tfmodel";
-    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6conandt/tfmodel";
+//    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/matrix6conandt/tfmodel";
+    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
 
     // create a session that takes our
     // scope as the root scope
@@ -91,31 +92,37 @@ int main(int argc, char **argv) {
     // Create the input data
     double min = -0.1;
     double max = 0.1;
-    const int num = 2;
+    const int num = 10;
 
     double step = (max - min) / (double) num;
 //    std::vector<Tensor> input_data[num] = {};
+    int numNodes = 24;
     typedef double T;
-    Tensor input_data(tensorflow::DT_DOUBLE,tensorflow::TensorShape({num, 6}));
+    Tensor input_data(tensorflow::DT_DOUBLE,tensorflow::TensorShape({num, numNodes}));
 
     auto mat = input_data.matrix<double>();
     double val = 2.0;
     double val2 = 1.0;
     for (int i = 0; i < num; i++){
-        input_data.matrix<double>()(i, 0) = val2;
-        input_data.matrix<double>()(i, 1) = val2;
-        input_data.matrix<double>()(i, 2) = val2;
-        input_data.matrix<double>()(i, 3) = val * i;
-        input_data.matrix<double>()(i, 4) = val * i;
-        input_data.matrix<double>()(i, 5) = val * i;
+        for (int j = 0; j < numNodes; j++) {
+            if (j < numNodes / 2)
+                input_data.matrix<double>()(i, j) = val2;
+            else
+                input_data.matrix<double>()(i, j) = val * i;
+        }
+//        input_data.matrix<double>()(i, 1) = val2;
+//        input_data.matrix<double>()(i, 2) = val2;
+//        input_data.matrix<double>()(i, 3) = val * i;
+//        input_data.matrix<double>()(i, 4) = val * i;
+//        input_data.matrix<double>()(i, 5) = val * i;
 
     }
     auto inputs = input_data.flat<double>();
     std::cout << "\ninputs\n";
-    for (int i = 0; i < 6 * num; i++){
+    for (int i = 0; i < numNodes * num; i++){
         auto a = inputs(i);
         std::cout << a << " ";
-        if (i % 6 == 0){
+        if (i % numNodes == 0){
             std::cout << "\n";
         }
 //        a = predicted_boxes(1, i);
@@ -127,8 +134,8 @@ int main(int argc, char **argv) {
     std::vector<std::pair<string, Tensor>> inputs_data  = {{input_node, input_data}};
 
 //    std::vector<string> output_nodes = {{"StatefulPartitionedCall:0"}};
-    std::vector<string> output_nodes_two = {{"PartitionedCall:0"}};
-    std::vector<string> output_nodes = {{"PartitionedCall:1"}};
+//    std::vector<string> output_nodes_two = {{"PartitionedCall:0"}};
+    std::vector<string> output_nodes = {{"PartitionedCall:0"}};
     TFParams params;
     LoadModel(&params, PathGraph);
     std::vector<Tensor> predictions;
@@ -146,10 +153,10 @@ int main(int argc, char **argv) {
 
 //    status = session.Create(graph_def);
     std::cout << " \n outputs \n";
-    for (int i = 0; i < 36 * num; i++){
+    for (int i = 0; i < numNodes * numNodes * num; i++){
         auto a = predicted_boxes(i);
         std::cout << a << " ";
-        if (i % 36 == 0){
+        if (i % numNodes * numNodes == 0){
             std::cout << "\n";
         }
 //        a = predicted_boxes(1, i);
