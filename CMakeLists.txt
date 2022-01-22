@@ -37,7 +37,7 @@ add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.
 add_executable(multiplytest src/tfcuda/multiplytest.cpp)
 add_executable(testmat src/tfcuda/testmat.cu)
 
-#
+
 #target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 #target_include_directories(test  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
 #

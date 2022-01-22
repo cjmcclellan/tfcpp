@@ -17,16 +17,16 @@
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
 
-#define DTYPE float
+#define DTYPE __half
 
 int main(int argc, char **argv) {
 
     // set the sizes
 //    int N = 2048 * 2;
 //    long N = 28867;
-    DTYPE memory = 2e9;
-//    long N = (long) std::sqrt(memory/(4*3));
-    long N = 20000;
+    double memory = 2e6;
+    long N = (long) std::sqrt(memory/(4*3));
+//    long N = 50000;
     long size = N*N;
 
     printf("loading vectors \n");
@@ -40,10 +40,10 @@ int main(int argc, char **argv) {
     // init the vectors with numbers;
     for (int i = 0; i < N; i++){
         for (int j = 0; j < N; j++){
-            h_a[i*N + j] = 1.0;
-            h_b[i*N + j] = 2.0;
-//            h_a[i*N + j] = rand() % 1024;
-//            h_b[i*N + j] = rand() % 1024;
+            h_a[i*N + j] = 0.1;
+            h_b[i*N + j] = 0.1;
+//            h_a[i*N + j] = rand();
+//            h_b[i*N + j] = rand();
         }
     }
 
@@ -52,6 +52,9 @@ int main(int argc, char **argv) {
     // create the device c pointer
     DTYPE* d_c;
     cudaError_t status;
+    status = cudaGetLastError () ; // clear error status
+    status = cudaGetLastError () ; // clear error status
+
     status = cudaMalloc((void **)&d_c, size * sizeof(DTYPE));
     CUDAMALLOCCHECK(d_c, size, DTYPE, status);
     DTYPE * h_c_custom = (DTYPE *) malloc(sizeof(DTYPE) * size);
@@ -70,6 +73,8 @@ int main(int argc, char **argv) {
     cublasCreate(&handle);
     // Set the math mode to allow cuBLAS to use Tensor Cores:
     blasStatus = cublasSetMathMode(handle, CUBLAS_PEDANTIC_MATH);
+//    blasStatus = cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH);
+
 
     // reset d_c to 0
     cudaMemset(d_c, 0, size * sizeof(DTYPE));
@@ -89,7 +94,7 @@ int main(int argc, char **argv) {
 
     std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
 
-    blasStatus = cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, N, N, N, &alpha, d_a, N, d_b, N, &beta, d_c, N);
+    blasStatus = cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, N, N, N, &alpha, d_a, N, d_b, N, &beta, d_c, N);
     cudaDeviceSynchronize();
     if ( blasStatus != CUBLAS_STATUS_SUCCESS )
     {
@@ -99,16 +104,44 @@ int main(int argc, char **argv) {
     }
     std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
 
-    std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::milliseconds>(endcu - begincu).count() << "[ms]" << std::endl;
+    std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(endcu - begincu).count() << "[us]" << std::endl;
 
     cudaMemcpy(h_c_cublas, d_c, size * sizeof(DTYPE), cudaMemcpyDeviceToHost);
+
+
+    // Now run with tensor cores
+    cublasHandle_t handleTensor;
+
+    cublasCreate(&handleTensor);
+    // Set the math mode to allow cuBLAS to use Tensor Cores:
+    blasStatus = cublasSetMathMode(handleTensor, CUBLAS_TENSOR_OP_MATH);
+
+    // reset d_c to 0
+    cudaMemset(d_c, 0, size * sizeof(DTYPE));
+    DTYPE * h_c_cublas_tensor = (DTYPE *) malloc(sizeof(DTYPE) * size);
+
+    begincu = std::chrono::steady_clock::now();
+
+    blasStatus = cublasHgemm(handleTensor, CUBLAS_OP_N, CUBLAS_OP_N, N, N, N, &alpha, d_a, N, d_b, N, &beta, d_c, N);
+    cudaDeviceSynchronize();
+    if ( blasStatus != CUBLAS_STATUS_SUCCESS )
+    {
+        printf("Cublas Tensor Error\n");
+        exit(-1);
+    }
+    endcu = std::chrono::steady_clock::now();
+
+    std::cout << "cuBLAS Tensor Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(endcu - begincu).count() << "[us]" << std::endl;
+
+    cudaMemcpy(h_c_cublas_tensor, d_c, size * sizeof(DTYPE), cudaMemcpyDeviceToHost);
+
 
     float error = 0;
     int num_errors = 0;
     for (int i = 0; i < N; i++){
         for (int j = 0; j < N; j++){
-            float tmp = (float) h_c_cublas[i*N + j] - N * 2;
-//            float tmp = std::abs((float) h_c_custom[i*N + j] - (float) h_c_cublas[i*N + j]);
+//            float tmp = (float) h_c_cublas[i*N + j] - N * 2;
+            float tmp = std::abs((float) h_c_cublas_tensor[i*N + j] - (float) h_c_cublas[i*N + j]);
             error += tmp;
             if (tmp != 0.0)
                 num_errors++;

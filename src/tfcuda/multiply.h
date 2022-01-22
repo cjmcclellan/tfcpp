@@ -9,6 +9,8 @@
 
 void multiplyPointer(DTYPE *d_a, DTYPE *d_b, DTYPE *d_c);
 
+void cudaCopy(double* des, double* sour, int N);
+
 int multiply(DTYPE a, DTYPE b);
 
 void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N, bool timeFunc=true);

@@ -6,6 +6,13 @@
 #include <stdio.h>            // printf
 #include <stdlib.h>           // EXIT_FAILURE
 
+__global__ void cudaCopy(double* des, double* sour, const int N){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if( i <  N) {
+        des[i] = sour[i];
+    }
+
+}
 
 __global__ void cuda_hello(int *a, int *b, int *c) {
     *c = *a + *b;
