@@ -3,107 +3,22 @@
 //
 
 
-#include "absl/memory/memory.h"
 #include "absl/strings/match.h"
-#include "tensorflow/core/common_runtime/device_factory.h"
 #include "tensorflow/core/common_runtime/device_mgr.h"
-#include "tensorflow/core/framework/allocator.h"
-//#include "tensorflow/core/framework/graph.pb.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
-//#include "tensorflow/core/framework/types.pb.h"
 #include "tensorflow/core/graph/costmodel.h"
 #include "tensorflow/core/graph/graph.h"
-#include "tensorflow/core/graph/node_builder.h"
-#include "tensorflow/core/graph/testlib.h"
-#include "tensorflow/core/kernels/ops_util.h"
-#include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/lib/core/status.h"
-//#include "tensorflow/core/lib/core/status_test_util.h"
-//#include "tensorflow/core/lib/core/threadpool.h"
-//#include "tensorflow/core/lib/strings/str_util.h"
-//#include "tensorflow/core/platform/protobuf.h"
-//#include "tensorflow/core/platform/stacktrace.h"
-//#include "tensorflow/core/platform/test.h"
-//#include "tensorflow/core/platform/test_benchmark.h"
-//#include "tensorflow/core/protobuf/rewriter_config.pb.h"
 #include "tensorflow/core/public/session.h"
-#include <tensorflow/cc/client/client_session.h>
-
 
 #include "tensorflow/core/public/session_options.h"
 #include "tensorflow/core/util/device_name_utils.h"
 #include "tensorflow/core/common_runtime/dma_helper.h"
-#include "tensorflow/cc/ops/state_ops.h"
-#include "tensorflow/cc/ops/array_ops.h"
-#include "tensorflow/cc/ops/math_ops.h"
 
-// from GPUGPUExample utils.h
-
-// Required for CUDA check
-#include "tensorflow/core/util/port.h"
-
-// GPU allocator
-#include "tensorflow/core/common_runtime/gpu/gpu_id.h"
-//#include "tensorflow/core/common_runtime/gpu/gpu_id_utils.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_init.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_cudamalloc_allocator.h"
-#include "tensorflow/core/common_runtime/device/device_mem_allocator.h"
 #include "tensorflow/core/common_runtime/device/device_id.h"
-#include "tensorflow/core/common_runtime/device/device_id_utils.h"
 
-// Direct session
-//#include "tensorflow/core/common_runtime/direct_session.h"
-
-#include "tensorflow/core/common_runtime/device_factory.h"
-#include "tensorflow/core/common_runtime/device_mgr.h"
-#include "tensorflow/core/framework/allocator.h"
-//#include "tensorflow/core/framework/graph.pb.h"
-#include "tensorflow/core/framework/op_kernel.h"
-#include "tensorflow/core/framework/tensor.h"
-//#include "tensorflow/core/framework/types.pb.h"
-#include "tensorflow/core/graph/costmodel.h"
-#include "tensorflow/core/graph/graph.h"
-#include "tensorflow/core/graph/node_builder.h"
-#include "tensorflow/core/graph/testlib.h"
-#include "tensorflow/core/kernels/ops_util.h"
-#include "tensorflow/core/lib/core/errors.h"
-#include "tensorflow/core/lib/core/status.h"
-//#include "tensorflow/core/lib/core/status_test_util.h"
-//#include "tensorflow/core/lib/core/threadpool.h"
-//#include "tensorflow/core/lib/strings/str_util.h"
-//#include "tensorflow/core/platform/protobuf.h"
-//#include "tensorflow/core/platform/stacktrace.h"
-//#include "tensorflow/core/platform/test.h"
-//#include "tensorflow/core/platform/test_benchmark.h"
-//#include "tensorflow/core/protobuf/rewriter_config.pb.h"
-#include "tensorflow/core/public/session.h"
-#include <tensorflow/cc/client/client_session.h>
-
-
-#include "tensorflow/core/public/session_options.h"
-#include "tensorflow/core/util/device_name_utils.h"
-#include "tensorflow/core/common_runtime/dma_helper.h"
-#include "tensorflow/cc/ops/state_ops.h"
-#include "tensorflow/cc/ops/array_ops.h"
-#include "tensorflow/cc/ops/math_ops.h"
-
-// from GPUGPUExample utils.h
-
-// Required for CUDA check
-#include "tensorflow/core/util/port.h"
-
-// GPU allocator
-#include "tensorflow/core/common_runtime/gpu/gpu_id.h"
-//#include "tensorflow/core/common_runtime/gpu/gpu_id_utils.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_init.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.h"
-#include "tensorflow/core/common_runtime/gpu/gpu_cudamalloc_allocator.h"
-#include "tensorflow/core/common_runtime/device/device_mem_allocator.h"
-#include "tensorflow/core/common_runtime/device/device_id.h"
-#include "tensorflow/core/common_runtime/device/device_id_utils.h"
-#include "tensorflow/core/public/session.h"
 #include "tensorflow/cc/saved_model/loader.h"
 #include <cuda_runtime.h>
 #include "string"
@@ -119,16 +34,25 @@ std::string GPUDeviceName(tensorflow::Session* session) {
     return "";
 }
 
+void printCUDADS(double *ptr, std::string name, std::size_t size, int num){
+    double test[num];
+    cudaMemcpy(&test, ptr, size * num, cudaMemcpyDeviceToHost);
+    std::cout << name << " value is :";
+    for (int i = 0; i < num; i++) {
+        std::cout << " " << test[i] << ", ";
+    }
+    std::cout << "\n";
+}
 
 int main(int argc, char **argv) {
-    printf("hello\n");
+
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/models/resistor";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6dummy/tfmodel";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6con/tfmodel";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6conbatch/tfmodel";
 //    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/matrix6conandt/tfmodel";
     std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
-    const int num = 1;
+    const int num = 3;
     int numNodes = 24;
 
     std::string inputLayer = "serving_default_input_temperature:0";
@@ -181,7 +105,7 @@ int main(int argc, char **argv) {
     typedef double T;
 //    Tensor input_data(tensorflow::DT_DOUBLE,tensorflow::TensorShape({num, numNodes}));
     std::vector<double> h_input(num * numNodes);
-    std::vector<double> h_output(num * numNodes);
+    std::vector<double> h_output(num * numNodes * numNodes);
 
     double val = 2.0;
     double val2 = 1.0;
@@ -195,7 +119,7 @@ int main(int argc, char **argv) {
 
     }
 
-    cudaMemcpy(input_tensor.flat<double>().data(), &h_input, num * numNodes * sizeof(double), cudaMemcpyHostToDevice);
+//    cudaMemcpy(input_tensor.flat<double>().data(), &h_input, num * numNodes * sizeof(double), cudaMemcpyHostToDevice);
 //
     std::cout << "\ninputs\n";
     for (int i = 0; i < numNodes * num; i++){
@@ -212,9 +136,9 @@ int main(int argc, char **argv) {
 
 
     status = session->RunCallable(feed_gpu_fetch_cpu,
-                          {input_tensor},
-                          &(outputs),
-                          nullptr);
+                                  {input_tensor},
+                                  &(outputs),
+                                  nullptr);
     if (!status.ok())
     {
         LOG(ERROR) << "Running model failed: " << status;
@@ -222,7 +146,9 @@ int main(int argc, char **argv) {
     }
 
     double* output_tensor_data = outputs[0].flat<double>().data();
-    cudaMemcpy(&h_output[0], output_tensor_data, num * numNodes * sizeof(double), cudaMemcpyDeviceToHost);
+//    printCUDADS(output_tensor_data, "output before", sizeof(double), num * numNodes * numNodes);
+
+    cudaMemcpy(&h_output[0], output_tensor_data, num * numNodes * numNodes * sizeof(double), cudaMemcpyDeviceToHost);
 
 //    auto predicted_scores = predictions[1].flat<double>();
 //    auto predicted_labels = predictions[2].tensor<double, 2>();
@@ -236,8 +162,6 @@ int main(int argc, char **argv) {
         if (i % numNodes * numNodes == 0){
             std::cout << "\n";
         }
-////        a = predicted_boxes(1, i);
-////        std::cout << a << " ";
     }
     return 0;
 }

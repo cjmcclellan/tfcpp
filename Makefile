@@ -120,6 +120,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named test_cuda_h
+
+# Build rule for target.
+test_cuda_h: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cuda_h
+.PHONY : test_cuda_h
+
+# fast build rule for target.
+test_cuda_h/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_cuda_h.dir/build.make CMakeFiles/test_cuda_h.dir/build
+.PHONY : test_cuda_h/fast
+
+#=============================================================================
+# Target rules for targets named testmat
+
+# Build rule for target.
+testmat: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 testmat
+.PHONY : testmat
+
+# fast build rule for target.
+testmat/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/testmat.dir/build.make CMakeFiles/testmat.dir/build
+.PHONY : testmat/fast
+
+#=============================================================================
 # Target rules for targets named loadmodels_incuda
 
 # Build rule for target.
@@ -144,19 +170,6 @@ tfcuda_test_matrix: cmake_check_build_system
 tfcuda_test_matrix/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tfcuda_test_matrix.dir/build.make CMakeFiles/tfcuda_test_matrix.dir/build
 .PHONY : tfcuda_test_matrix/fast
-
-#=============================================================================
-# Target rules for targets named multiplytest
-
-# Build rule for target.
-multiplytest: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 multiplytest
-.PHONY : multiplytest
-
-# fast build rule for target.
-multiplytest/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/multiplytest.dir/build.make CMakeFiles/multiplytest.dir/build
-.PHONY : multiplytest/fast
 
 #=============================================================================
 # Target rules for targets named tfcuda_test
@@ -224,30 +237,56 @@ tfcuda_test_matrix_testing/fast:
 .PHONY : tfcuda_test_matrix_testing/fast
 
 #=============================================================================
-# Target rules for targets named testmat
+# Target rules for targets named multiplytest
 
 # Build rule for target.
-testmat: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 testmat
-.PHONY : testmat
+multiplytest: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 multiplytest
+.PHONY : multiplytest
 
 # fast build rule for target.
-testmat/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/testmat.dir/build.make CMakeFiles/testmat.dir/build
-.PHONY : testmat/fast
+multiplytest/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/multiplytest.dir/build.make CMakeFiles/multiplytest.dir/build
+.PHONY : multiplytest/fast
 
 #=============================================================================
-# Target rules for targets named test_cuda_h
+# Target rules for targets named test_matrix
 
 # Build rule for target.
-test_cuda_h: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_cuda_h
-.PHONY : test_cuda_h
+test_matrix: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_matrix
+.PHONY : test_matrix
 
 # fast build rule for target.
-test_cuda_h/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_cuda_h.dir/build.make CMakeFiles/test_cuda_h.dir/build
-.PHONY : test_cuda_h/fast
+test_matrix/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix.dir/build.make CMakeFiles/test_matrix.dir/build
+.PHONY : test_matrix/fast
+
+#=============================================================================
+# Target rules for targets named test_tcores
+
+# Build rule for target.
+test_tcores: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_tcores
+.PHONY : test_tcores
+
+# fast build rule for target.
+test_tcores/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_tcores.dir/build.make CMakeFiles/test_tcores.dir/build
+.PHONY : test_tcores/fast
+
+#=============================================================================
+# Target rules for targets named test_matrix_hold
+
+# Build rule for target.
+test_matrix_hold: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_matrix_hold
+.PHONY : test_matrix_hold
+
+# fast build rule for target.
+test_matrix_hold/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/build
+.PHONY : test_matrix_hold/fast
 
 src/loadmodels/loadmodels.o: src/loadmodels/loadmodels.cpp.o
 .PHONY : src/loadmodels/loadmodels.o
@@ -368,6 +407,78 @@ src/tfcuda/test_cuda_h.s: src/tfcuda/test_cuda_h.cpp.s
 src/tfcuda/test_cuda_h.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_cuda_h.dir/build.make CMakeFiles/test_cuda_h.dir/src/tfcuda/test_cuda_h.cpp.s
 .PHONY : src/tfcuda/test_cuda_h.cpp.s
+
+src/tfcuda/test_matrix.o: src/tfcuda/test_matrix.cpp.o
+.PHONY : src/tfcuda/test_matrix.o
+
+# target to build an object file
+src/tfcuda/test_matrix.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix.dir/build.make CMakeFiles/test_matrix.dir/src/tfcuda/test_matrix.cpp.o
+.PHONY : src/tfcuda/test_matrix.cpp.o
+
+src/tfcuda/test_matrix.i: src/tfcuda/test_matrix.cpp.i
+.PHONY : src/tfcuda/test_matrix.i
+
+# target to preprocess a source file
+src/tfcuda/test_matrix.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix.dir/build.make CMakeFiles/test_matrix.dir/src/tfcuda/test_matrix.cpp.i
+.PHONY : src/tfcuda/test_matrix.cpp.i
+
+src/tfcuda/test_matrix.s: src/tfcuda/test_matrix.cpp.s
+.PHONY : src/tfcuda/test_matrix.s
+
+# target to generate assembly for a file
+src/tfcuda/test_matrix.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix.dir/build.make CMakeFiles/test_matrix.dir/src/tfcuda/test_matrix.cpp.s
+.PHONY : src/tfcuda/test_matrix.cpp.s
+
+src/tfcuda/test_matrix_hold.o: src/tfcuda/test_matrix_hold.cpp.o
+.PHONY : src/tfcuda/test_matrix_hold.o
+
+# target to build an object file
+src/tfcuda/test_matrix_hold.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/src/tfcuda/test_matrix_hold.cpp.o
+.PHONY : src/tfcuda/test_matrix_hold.cpp.o
+
+src/tfcuda/test_matrix_hold.i: src/tfcuda/test_matrix_hold.cpp.i
+.PHONY : src/tfcuda/test_matrix_hold.i
+
+# target to preprocess a source file
+src/tfcuda/test_matrix_hold.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/src/tfcuda/test_matrix_hold.cpp.i
+.PHONY : src/tfcuda/test_matrix_hold.cpp.i
+
+src/tfcuda/test_matrix_hold.s: src/tfcuda/test_matrix_hold.cpp.s
+.PHONY : src/tfcuda/test_matrix_hold.s
+
+# target to generate assembly for a file
+src/tfcuda/test_matrix_hold.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/src/tfcuda/test_matrix_hold.cpp.s
+.PHONY : src/tfcuda/test_matrix_hold.cpp.s
+
+src/tfcuda/test_tcores.o: src/tfcuda/test_tcores.cpp.o
+.PHONY : src/tfcuda/test_tcores.o
+
+# target to build an object file
+src/tfcuda/test_tcores.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_tcores.dir/build.make CMakeFiles/test_tcores.dir/src/tfcuda/test_tcores.cpp.o
+.PHONY : src/tfcuda/test_tcores.cpp.o
+
+src/tfcuda/test_tcores.i: src/tfcuda/test_tcores.cpp.i
+.PHONY : src/tfcuda/test_tcores.i
+
+# target to preprocess a source file
+src/tfcuda/test_tcores.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_tcores.dir/build.make CMakeFiles/test_tcores.dir/src/tfcuda/test_tcores.cpp.i
+.PHONY : src/tfcuda/test_tcores.cpp.i
+
+src/tfcuda/test_tcores.s: src/tfcuda/test_tcores.cpp.s
+.PHONY : src/tfcuda/test_tcores.s
+
+# target to generate assembly for a file
+src/tfcuda/test_tcores.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_tcores.dir/build.make CMakeFiles/test_tcores.dir/src/tfcuda/test_tcores.cpp.s
+.PHONY : src/tfcuda/test_tcores.cpp.s
 
 src/tfcuda/testmat.o: src/tfcuda/testmat.cu.o
 .PHONY : src/tfcuda/testmat.o
@@ -502,6 +613,9 @@ help:
 	@echo "... multiply"
 	@echo "... multiplytest"
 	@echo "... test_cuda_h"
+	@echo "... test_matrix"
+	@echo "... test_matrix_hold"
+	@echo "... test_tcores"
 	@echo "... testmat"
 	@echo "... tfcuda_test"
 	@echo "... tfcuda_test_cpu"
@@ -522,6 +636,15 @@ help:
 	@echo "... src/tfcuda/test_cuda_h.o"
 	@echo "... src/tfcuda/test_cuda_h.i"
 	@echo "... src/tfcuda/test_cuda_h.s"
+	@echo "... src/tfcuda/test_matrix.o"
+	@echo "... src/tfcuda/test_matrix.i"
+	@echo "... src/tfcuda/test_matrix.s"
+	@echo "... src/tfcuda/test_matrix_hold.o"
+	@echo "... src/tfcuda/test_matrix_hold.i"
+	@echo "... src/tfcuda/test_matrix_hold.s"
+	@echo "... src/tfcuda/test_tcores.o"
+	@echo "... src/tfcuda/test_tcores.i"
+	@echo "... src/tfcuda/test_tcores.s"
 	@echo "... src/tfcuda/testmat.o"
 	@echo "... src/tfcuda/testmat.i"
 	@echo "... src/tfcuda/testmat.s"

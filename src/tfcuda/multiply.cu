@@ -7,8 +7,10 @@
 #include <stdio.h>            // printf
 #include <stdlib.h>           // EXIT_FAILURE
 #include "multiply.h"
+#include <iostream>
+#include "chrono"
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 32
 
 // TODO: make array multiply
 __global__ void cuda_hello(DTYPE *a, DTYPE *b, DTYPE *c) {
@@ -44,16 +46,21 @@ void matrixMultiplicationCPU(DTYPE *a, DTYPE *b, DTYPE *c, int N){
 
 }
 
-void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N){
-
+void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N, bool timeFunc){
+    cudaError_t status;
     DTYPE *d_a, *d_b;
-    int size = N * N;
+    long size = (long) N * (long) N;
 
-    cudaMalloc((void **)&d_a, size * sizeof(DTYPE));
-    cudaMalloc((void **)&d_b, size * sizeof(DTYPE));
+    status = cudaMalloc((void **)&d_a, size * sizeof(DTYPE));
+    CUDAMALLOCCHECK(d_a, size, DTYPE, status);
+    long t = size * sizeof(DTYPE);
+    status = cudaMalloc((void **)&d_b, size * sizeof(DTYPE));
+    CUDAMALLOCCHECK(d_b, size, DTYPE, status);
 
-    cudaMemcpy(d_a, a, size * sizeof(DTYPE), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_b, b, size * sizeof(DTYPE), cudaMemcpyHostToDevice);
+    status = cudaMemcpy(d_a, a, size * sizeof(DTYPE), cudaMemcpyHostToDevice);
+    CUDAMEMCPYCHECK(d_a, size, DTYPE, status);
+    status = cudaMemcpy(d_b, b, size * sizeof(DTYPE), cudaMemcpyHostToDevice);
+    CUDAMEMCPYCHECK(d_b, size, DTYPE, status);
 
 //    dim3 threadsPerBlock(N, N);
 //    dim3 blocksPerGrid(1, 1);
@@ -68,15 +75,28 @@ void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N){
     dim3 dimGrid(grid_cols, grid_rows);
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
 
-    matrixMultiplicationKernel<<<dimGrid,dimBlock>>>(d_a, d_b, d_c, N);
+    status = cudaGetLastError () ; // clear error status
 
-    cudaError_t err = cudaGetLastError();        // Get error code
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    matrixMultiplicationKernel<<<dimGrid,dimBlock>>>(d_b, d_a, d_c, N);
 
-    if ( err != cudaSuccess )
+    cudaDeviceSynchronize () ;
+
+    if (timeFunc) {
+        std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+        std::cout << "CUDA Mat Multiply call took = "
+                  << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+    }
+
+    status = cudaGetLastError();        // Get error code
+
+    if ( status != cudaSuccess )
     {
-        printf("CUDA Error: %s\n", cudaGetErrorString(err));
+        printf("CUDA Error: %s\n", cudaGetErrorString(status));
         exit(-1);
     }
+//    cudaFree(d_a);
+//    cudaFree(d_b);
 }
 
 void multiplyPointer(DTYPE *d_a, DTYPE *d_b, DTYPE *d_c){
