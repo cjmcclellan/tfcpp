@@ -12,6 +12,8 @@
 
 #define BLOCK_SIZE 32
 
+
+
 // TODO: make array multiply
 __global__ void cuda_hello(DTYPE *a, DTYPE *b, DTYPE *c) {
     printf("hello cuda \n");
@@ -97,6 +99,23 @@ void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N, bool timeFunc){
     }
 //    cudaFree(d_a);
 //    cudaFree(d_b);
+}
+
+
+__global__ void cudaCopyKernel(DTYPE * des, DTYPE * src, const long N){
+    int tx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tx<N)
+        des[tx]=src[tx];
+}
+
+void cudaCopy(DTYPE *des, DTYPE* src, long N){
+    unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 dimGrid(grid_cols, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
+
+    cudaCopyKernel<<<dimGrid,dimBlock>>>(des, src, N);
+    cudaDeviceSynchronize();
+
 }
 
 void multiplyPointer(DTYPE *d_a, DTYPE *d_b, DTYPE *d_c){

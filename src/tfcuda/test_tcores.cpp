@@ -19,17 +19,58 @@
 
 #define DTYPE __half
 
-int main(int argc, char **argv) {
+std::chrono::duration<double> runMatMultiply(long N, DTYPE * d_a, DTYPE * d_b, DTYPE * d_c, bool tensor){
 
-    // set the sizes
-//    int N = 2048 * 2;
-//    long N = 28867;
-    double memory = 2e6;
-    long N = (long) std::sqrt(memory/(4*3));
-//    long N = 50000;
+    long size = N * N;
+
+    cudaError_t status;
+    status = cudaGetLastError () ; // clear error status
+
+    // create the handle
+    const DTYPE alpha = 1.0f;
+    const DTYPE beta = 0.0f;
+    cublasStatus_t blasStatus;
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+
+    // Set the math mode to allow cuBLAS to use Tensor Cores:
+    if (!tensor)
+        blasStatus = cublasSetMathMode(handle, CUBLAS_PEDANTIC_MATH);
+
+    // reset d_c to 0
+    cudaMemset(d_c, 0, size * sizeof(DTYPE));
+
+    cudaDeviceSynchronize();
+    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
+
+    blasStatus = cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N,
+                             N, N, N,
+                             &alpha, d_a, N,
+                             d_b, N, &beta,
+                             d_c, N);
+    cudaDeviceSynchronize();
+    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
+
+    if ( blasStatus != CUBLAS_STATUS_SUCCESS )
+    {
+//        printf("Cublas Error: %s\n", cudaGetErrorString(blasStatus));
+        printf("Cublas Error\n");
+        exit(-1);
+    }
+    std::chrono::duration<double> firstcuBlas = endcu - begincu;
+    if (tensor)
+        std::cout << "cuBLAS Mat Tensor Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
+    else
+        std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
+
+    return firstcuBlas;
+}
+
+void compareMatMultiplies(long N){
+
     long size = N*N;
 
-    printf("loading vectors \n");
+    printf("\n####### loading vectors size %d ######\n", N);
 
     // now lets run the cuda multiply code
 //    std::vector<DTYPE> h_a(size);
@@ -46,41 +87,9 @@ int main(int argc, char **argv) {
 //            h_b[i*N + j] = rand();
         }
     }
-
-    printf("running matrix multiplication \n");
-
-    // create the device c pointer
-    DTYPE* d_c;
     cudaError_t status;
-    status = cudaGetLastError () ; // clear error status
-    status = cudaGetLastError () ; // clear error status
 
-    status = cudaMalloc((void **)&d_c, size * sizeof(DTYPE));
-    CUDAMALLOCCHECK(d_c, size, DTYPE, status);
-    DTYPE * h_c_custom = (DTYPE *) malloc(sizeof(DTYPE) * size);
-
-//    matrixMultiplication(h_a, h_b, d_c, N);
-
-    cudaMemcpy(h_c_custom, d_c, size * sizeof(DTYPE), cudaMemcpyDeviceToHost);
-
-    printf("running cuBLASDgemm \n");
-
-    // create the handle
-    const DTYPE alpha = 1.0f;
-    const DTYPE beta = 0.0f;
-    cublasStatus_t blasStatus;
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    // Set the math mode to allow cuBLAS to use Tensor Cores:
-    blasStatus = cublasSetMathMode(handle, CUBLAS_PEDANTIC_MATH);
-//    blasStatus = cublasSetMathMode(handle, CUBLAS_TENSOR_OP_MATH);
-
-
-    // reset d_c to 0
-    cudaMemset(d_c, 0, size * sizeof(DTYPE));
     DTYPE *d_a, *d_b;
-    DTYPE * h_c_cublas = (DTYPE *) malloc(sizeof(DTYPE) * size);
-
     status = cudaMalloc((void **)&d_a, size * sizeof(DTYPE));
     CUDAMALLOCCHECK(d_a, size, DTYPE, status);
     long t = size * sizeof(DTYPE);
@@ -92,46 +101,25 @@ int main(int argc, char **argv) {
     status = cudaMemcpy(d_b, h_b, size * sizeof(DTYPE), cudaMemcpyHostToDevice);
     CUDAMEMCPYCHECK(d_b, size, DTYPE, status);
 
-    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
+    // create the device c pointer
+    DTYPE* d_c;
+    status = cudaMalloc((void **)&d_c, size * sizeof(DTYPE));
+    CUDAMALLOCCHECK(d_c, size, DTYPE, status);
+    DTYPE * h_c_cublas = (DTYPE *) malloc(sizeof(DTYPE) * size);
 
-    blasStatus = cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, N, N, N, &alpha, d_a, N, d_b, N, &beta, d_c, N);
-    cudaDeviceSynchronize();
-    if ( blasStatus != CUBLAS_STATUS_SUCCESS )
-    {
-//        printf("Cublas Error: %s\n", cudaGetErrorString(blasStatus));
-        printf("Cublas Error\n");
-        exit(-1);
-    }
-    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
+    printf("running cuBLASDgemm \n");
 
-    std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(endcu - begincu).count() << "[us]" << std::endl;
+    // runn without tensor op
+    std::chrono::duration<double> firstcuBlas = runMatMultiply(N, d_a, d_b, d_c, true);
 
     cudaMemcpy(h_c_cublas, d_c, size * sizeof(DTYPE), cudaMemcpyDeviceToHost);
 
+    // now run with tensor op
+    std::chrono::duration<double> secondcuBlas = runMatMultiply(N, d_a, d_b, d_c, false);
 
-    // Now run with tensor cores
-    cublasHandle_t handleTensor;
+    std::cout << "speed up of " << secondcuBlas/firstcuBlas << std::endl;
 
-    cublasCreate(&handleTensor);
-    // Set the math mode to allow cuBLAS to use Tensor Cores:
-    blasStatus = cublasSetMathMode(handleTensor, CUBLAS_TENSOR_OP_MATH);
-
-    // reset d_c to 0
-    cudaMemset(d_c, 0, size * sizeof(DTYPE));
     DTYPE * h_c_cublas_tensor = (DTYPE *) malloc(sizeof(DTYPE) * size);
-
-    begincu = std::chrono::steady_clock::now();
-
-    blasStatus = cublasHgemm(handleTensor, CUBLAS_OP_N, CUBLAS_OP_N, N, N, N, &alpha, d_a, N, d_b, N, &beta, d_c, N);
-    cudaDeviceSynchronize();
-    if ( blasStatus != CUBLAS_STATUS_SUCCESS )
-    {
-        printf("Cublas Tensor Error\n");
-        exit(-1);
-    }
-    endcu = std::chrono::steady_clock::now();
-
-    std::cout << "cuBLAS Tensor Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(endcu - begincu).count() << "[us]" << std::endl;
 
     cudaMemcpy(h_c_cublas_tensor, d_c, size * sizeof(DTYPE), cudaMemcpyDeviceToHost);
 
@@ -151,5 +139,22 @@ int main(int argc, char **argv) {
 //    printf("Total error: %f, with %d errors \n", error, num_errors);
     std::cout << "total error " << error << " with "<< num_errors << " errors" << std::endl;
 
+    // clean up
+    free(h_c_cublas_tensor);
+    free(h_c_cublas);
+    free(h_a);
+    free(h_b);
+    cudaFree(d_c);
+    cudaFree(d_a);
+    cudaFree(d_b);
+
+}
+
+int main(int argc, char **argv) {
+
+    std::vector<long> Ns = {2000, 4000, 10000, 16000};
+
+    for(long N : Ns)
+        compareMatMultiplies(N);
     return 0;
 }
