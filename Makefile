@@ -146,6 +146,19 @@ testmat/fast:
 .PHONY : testmat/fast
 
 #=============================================================================
+# Target rules for targets named tfcuda_test_matrix_testing
+
+# Build rule for target.
+tfcuda_test_matrix_testing: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tfcuda_test_matrix_testing
+.PHONY : tfcuda_test_matrix_testing
+
+# fast build rule for target.
+tfcuda_test_matrix_testing/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/tfcuda_test_matrix_testing.dir/build.make CMakeFiles/tfcuda_test_matrix_testing.dir/build
+.PHONY : tfcuda_test_matrix_testing/fast
+
+#=============================================================================
 # Target rules for targets named loadmodels_incuda
 
 # Build rule for target.
@@ -157,6 +170,19 @@ loadmodels_incuda: cmake_check_build_system
 loadmodels_incuda/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/loadmodels_incuda.dir/build.make CMakeFiles/loadmodels_incuda.dir/build
 .PHONY : loadmodels_incuda/fast
+
+#=============================================================================
+# Target rules for targets named test_copy
+
+# Build rule for target.
+test_copy: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_copy
+.PHONY : test_copy
+
+# fast build rule for target.
+test_copy/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_copy.dir/build.make CMakeFiles/test_copy.dir/build
+.PHONY : test_copy/fast
 
 #=============================================================================
 # Target rules for targets named tfcuda_test_matrix
@@ -222,19 +248,6 @@ tfcuda_test_cpu: cmake_check_build_system
 tfcuda_test_cpu/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/tfcuda_test_cpu.dir/build.make CMakeFiles/tfcuda_test_cpu.dir/build
 .PHONY : tfcuda_test_cpu/fast
-
-#=============================================================================
-# Target rules for targets named tfcuda_test_matrix_testing
-
-# Build rule for target.
-tfcuda_test_matrix_testing: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 tfcuda_test_matrix_testing
-.PHONY : tfcuda_test_matrix_testing
-
-# fast build rule for target.
-tfcuda_test_matrix_testing/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/tfcuda_test_matrix_testing.dir/build.make CMakeFiles/tfcuda_test_matrix_testing.dir/build
-.PHONY : tfcuda_test_matrix_testing/fast
 
 #=============================================================================
 # Target rules for targets named multiplytest
@@ -383,6 +396,30 @@ src/tfcuda/multiplytest.s: src/tfcuda/multiplytest.cpp.s
 src/tfcuda/multiplytest.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/multiplytest.dir/build.make CMakeFiles/multiplytest.dir/src/tfcuda/multiplytest.cpp.s
 .PHONY : src/tfcuda/multiplytest.cpp.s
+
+src/tfcuda/test_copy.o: src/tfcuda/test_copy.cpp.o
+.PHONY : src/tfcuda/test_copy.o
+
+# target to build an object file
+src/tfcuda/test_copy.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_copy.dir/build.make CMakeFiles/test_copy.dir/src/tfcuda/test_copy.cpp.o
+.PHONY : src/tfcuda/test_copy.cpp.o
+
+src/tfcuda/test_copy.i: src/tfcuda/test_copy.cpp.i
+.PHONY : src/tfcuda/test_copy.i
+
+# target to preprocess a source file
+src/tfcuda/test_copy.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_copy.dir/build.make CMakeFiles/test_copy.dir/src/tfcuda/test_copy.cpp.i
+.PHONY : src/tfcuda/test_copy.cpp.i
+
+src/tfcuda/test_copy.s: src/tfcuda/test_copy.cpp.s
+.PHONY : src/tfcuda/test_copy.s
+
+# target to generate assembly for a file
+src/tfcuda/test_copy.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_copy.dir/build.make CMakeFiles/test_copy.dir/src/tfcuda/test_copy.cpp.s
+.PHONY : src/tfcuda/test_copy.cpp.s
 
 src/tfcuda/test_cuda_h.o: src/tfcuda/test_cuda_h.cpp.o
 .PHONY : src/tfcuda/test_cuda_h.o
@@ -612,6 +649,7 @@ help:
 	@echo "... loadmodels_incuda"
 	@echo "... multiply"
 	@echo "... multiplytest"
+	@echo "... test_copy"
 	@echo "... test_cuda_h"
 	@echo "... test_matrix"
 	@echo "... test_matrix_hold"
@@ -633,6 +671,9 @@ help:
 	@echo "... src/tfcuda/multiplytest.o"
 	@echo "... src/tfcuda/multiplytest.i"
 	@echo "... src/tfcuda/multiplytest.s"
+	@echo "... src/tfcuda/test_copy.o"
+	@echo "... src/tfcuda/test_copy.i"
+	@echo "... src/tfcuda/test_copy.s"
 	@echo "... src/tfcuda/test_cuda_h.o"
 	@echo "... src/tfcuda/test_cuda_h.i"
 	@echo "... src/tfcuda/test_cuda_h.s"

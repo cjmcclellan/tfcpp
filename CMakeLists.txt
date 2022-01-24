@@ -17,8 +17,8 @@ set_target_properties(multiply PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
 
 # We installed Tensorflow in /opt/tensorflow - change if you installed elsewhere
-#set(TENSORFLOW_LIB_DIR "/home/deepsim/Documents/Tensorflow/tfinstall")
-set(TENSORFLOW_LIB_DIR "~/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow")
+set(TENSORFLOW_LIB_DIR "/home/deepsim/Documents/Tensorflow/tfinstall")
+#set(TENSORFLOW_LIB_DIR "~/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow")
 #
 set(TFLIBS ${TENSORFLOW_LIB_DIR}/libtensorflow_cc.so ${TENSORFLOW_LIB_DIR}/libtensorflow_framework.so)
 #set(TFLIBS )

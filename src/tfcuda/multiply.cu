@@ -118,6 +118,40 @@ void cudaCopy(DTYPE *des, DTYPE* src, long N){
 
 }
 
+
+__global__ void gpuPrintfKernel(double* dev_ptr, long N){
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i == 0)
+        printf("\n gpu printing \n");
+    if (i < N){
+        printf(" %d: %f ,", i, dev_ptr[i]);
+    }
+}
+
+void gpuPrintf(double* dev_ptr, long N){
+    unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 dimGrid(grid_cols, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
+
+    gpuPrintfKernel<<<dimGrid,dimBlock>>>(dev_ptr, N);
+    cudaDeviceSynchronize();
+}
+
+void __global__ batchArrayKernel(double ** batches, double * array, long numBatches, long batchSize) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < numBatches)
+        batches[i] = &array[i * batchSize];
+}
+
+void batchArray(double ** batches, double * array, long numBatches, long batchSize){
+    unsigned int grid_cols = (numBatches + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 dimGrid(grid_cols, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
+
+    batchArrayKernel<<<dimGrid,dimBlock>>>(batches, array, numBatches, batchSize);
+
+}
+
 void multiplyPointer(DTYPE *d_a, DTYPE *d_b, DTYPE *d_c){
     cuda_hello<<<1,1>>>(d_a, d_b, d_c);
 }

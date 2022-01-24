@@ -108,7 +108,7 @@ void loadTFModel(struct TFModel* model){
 }
 
 
-std::chrono::duration<double> runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, long N_c,
+std::chrono::duration<double> runMatMultiply(double** d_a, long N_a, double** d_b, long N_b, double ** d_c, long N_c,
                                              int batchSize, bool tensor, cublasHandle_t* handle){
     // clear error status
 
@@ -124,8 +124,8 @@ std::chrono::duration<double> runMatMultiply(double* d_a, long N_a, double* d_b,
     cudaDeviceSynchronize();
     std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
 
-    blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
-                             &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
+    blasStatus = cublasDgemmBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
+                             &alpha, d_a, N_a, d_b, N_b, &beta, d_c, N_a, batchSize);
     cudaDeviceSynchronize();
     std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
 
@@ -159,27 +159,48 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
     status = cudaMalloc((void **)&d_input, totalInputN * sizeof(double));
     CUDAMALLOCCHECK(d_input, totalInputN, double, status);
     status = cudaMemcpy(d_input, h_input, totalInputN * sizeof(double ), cudaMemcpyHostToDevice);
-    CUDAMEMCPYCHECK(d_input, totalInputN, double, status);
+
+    // init batch arrays
+//    double* batchedInputs[model->batchSize];
+    double** d_batchInputs;
+    status = cudaMalloc((void **)&d_batchInputs, model->batchSize * sizeof(double*));
+    CUDAMALLOCCHECK(d_batchInputs, model->batchSize, double*, status)
+
+//    double* batchConductances[model->batchSize];
+    double** d_batchConductances;
+    status = cudaMalloc((void **)&d_batchConductances, model->batchSize * sizeof(double*));
+    CUDAMALLOCCHECK(d_batchConductances, model->batchSize, double*, status)
 
     // create output and allocate space for all the outputs
-    double* d_output;
-    status = cudaMalloc((void **)&d_output, totalOutputN * sizeof(double));
-    CUDAMALLOCCHECK(d_output, totalOutputN, double, status)
+    // what I'm going to do is create one large space in GPU memory then give the addresses to the subset of that space
+//    double* output[model->batchSize];
+    double** output = (double **) malloc(model->batchSize * model->numBatches * sizeof(double*));
+    double* d_output_head;
+    double** d_output;
 
+    status = cudaMalloc((void **)&d_output, model->batchSize * model->numBatches * sizeof(double*));
+    CUDAMALLOCCHECK(d_output, model->batchSize * model->numBatches, double*, status)
+
+    status = cudaMalloc((void **)&d_output_head, totalOutputN * sizeof(double));
+    CUDAMALLOCCHECK(d_output_head, totalOutputN, double, status)
+
+    for (int i = 0; i < model->batchSize * model->numBatches; i++){
+        output[i] = d_output_head + i * model->inputSize;
+//        cudaMalloc((void **)&output[i], model->inputSize * sizeof(double*));
+    }
+    cudaMemcpy(d_output, output, model->batchSize * model->numBatches * sizeof(double*), cudaMemcpyHostToDevice);
+//    gpuPrintf(*d_output, model->batchSize * model->numBatches);
     // init the handle
     cublasHandle_t handle;
     cublasCreate(&handle);
-
-    cudaDeviceSynchronize();
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     for (int i_batch = 0; i_batch < model->numBatches; i_batch++) {
         status = cudaGetLastError () ;
 
         double * d_input_batch = d_input + i_batch * modelBatchSize;
-
         // copy the input to the input tensor
         cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+
         status = cudaGetLastError () ;
 
         // run the graph to get the output conductances
@@ -188,20 +209,44 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
         if (!runStatus.ok()) {
             LOG(ERROR) << "Running model failed: " << runStatus;
         }
+        status = cudaGetLastError () ;
+
+        // now create an array of pointers to the batched input vectors and conductance matrices
+        batchArray(d_batchInputs, d_input_batch, model->batchSize, model->inputSize);
+        batchArray(d_batchConductances,  model->outputs[0].flat<double>().data(), model->batchSize, numConductances);
+        status = cudaGetLastError () ;
+//        for (int i = 0; i < model->batchSize; i++){
+////            batchedInputs[i] = d_input_batch + (i * model->inputSize);
+////            batchConductances[i] = model->outputs[0].flat<double>().data() + (i * numConductances);
+//            status = cudaMalloc((void **) &output[i], model->inputSize * sizeof(double*));
+//            CUDAMALLOCCHECK(output[i], model->inputSize , double*, status);
+//        }
+        // now copy the pointers to the gpu
+//        cudaMemcpy(d_batchInputs, batchedInputs, model->batchSize * sizeof(double*), cudaMemcpyHostToDevice);
+//        cudaMemcpy(d_batchConductances, batchConductances, model->batchSize * sizeof(double*), cudaMemcpyHostToDevice);
+//        status = cudaMemcpy(d_output, output, model->batchSize * sizeof(double*), cudaMemcpyHostToDevice);
+//        CUDAMEMCPYCHECK(d_output, model->batchSize, double*, status);
+//        cudaMalloc((void **)d_output, out_N * sizeof(double));
+//        status = cudaGetLastError () ;
 
         // get this output batches by indexing d_output
-        double *d_output_batch = d_output + i_batch * modelBatchSize;
+        double **d_output_batched = d_output + i_batch * model->batchSize;
+        status = cudaGetLastError () ;
 
         // now run a cuda blas on the output tensors
-        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
-                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
+        runMatMultiply(d_batchInputs, 1, d_batchConductances, model->inputSize,
+                       d_output_batched, model->inputSize, model->batchSize, true, &handle);
+
+        status = cudaGetLastError () ;
+
+        // now copy the output data back
+//        for (int i = 0; i < model->batchSize; i++) {
+////            gpuPrintf(output[i], model->outputSize);
+//            cudaMemcpy(&h_output[i_batch + i * model->outputSize], output[i], model->outputSize * sizeof(double), cudaMemcpyDeviceToHost);
+//        }
     }
 
-    cudaDeviceSynchronize();
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    std::cout << "Run took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-
-    cudaMemcpy(h_output, d_output, totalOutputN * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_output, d_output_head, totalOutputN * sizeof(double), cudaMemcpyDeviceToHost);
 
 }
 
@@ -209,9 +254,7 @@ int main(int argc, char **argv) {
 
     struct TFModel model;
     model.numBatches = 100*100;
-    model.batchSize = 1000;
-//    model.numBatches = 1*2;
-//    model.batchSize = 2;
+    model.batchSize = 500;
     model.inputSize = 24;
     model.outputSize = 24;
     loadTFModel(&model);

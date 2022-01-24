@@ -17,10 +17,13 @@ void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N, bool timeFunc=t
 
 void matrixMultiplicationCPU(DTYPE *a, DTYPE *b, DTYPE *c, int N);
 
+void gpuPrintf(double * dev_ptr, long N);
+
+void batchArray(double ** batches, double * array, long numBatches, long batchSize);
+
 #define CUDAMALLOCCHECK(a, b, c, d) \
     if (d != cudaSuccess) \
     { \
-        fprintf (stderr, "cuCKTsetup routine...\n") ; \
         fprintf (stderr, "Error: cudaMalloc failed on %s size of %ld bytes\n", #a, (long)(b * sizeof(c))) ; \
         fprintf (stderr, "Error: %s = %d, %s\n", #d, d, cudaGetErrorString (d)) ; \
     }
@@ -29,7 +32,6 @@ void matrixMultiplicationCPU(DTYPE *a, DTYPE *b, DTYPE *c, int N);
 #define CUDAMEMCPYCHECK(a, b, c, d) \
     if (d != cudaSuccess) \
     { \
-        fprintf (stderr, "cuCKTsetup routine...\n") ; \
         fprintf (stderr, "Error: cudaMemcpy failed on %s size of %ld bytes\n", #a, (long)(b * sizeof(c))) ; \
         fprintf (stderr, "Error: %s = %d, %s\n", #d, d, cudaGetErrorString (d)) ; \
     }
