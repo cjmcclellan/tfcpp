@@ -108,7 +108,7 @@ void loadTFModel(struct TFModel* model){
 }
 
 
-std::chrono::duration<double> runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, long N_c,
+void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, long N_c,
                                              int batchSize, bool tensor, cublasHandle_t* handle){
     // clear error status
 
@@ -118,16 +118,16 @@ std::chrono::duration<double> runMatMultiply(double* d_a, long N_a, double* d_b,
     cublasStatus_t blasStatus;
 
     // Set the math mode to allow cuBLAS to use Tensor Cores:
-    if (!tensor)
-        blasStatus = cublasSetMathMode(*handle, CUBLAS_PEDANTIC_MATH);
+//    if (!tensor)
+//    blasStatus = cublasSetMathMode(*handle, CUBLAS_TENSOR_OP_MATH);
 
-    cudaDeviceSynchronize();
-    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
+//    cudaDeviceSynchronize();
+//    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
 
     blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
                              &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
-    cudaDeviceSynchronize();
-    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
+//    cudaDeviceSynchronize();
+//    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
 
     if ( blasStatus != CUBLAS_STATUS_SUCCESS )
     {
@@ -135,13 +135,13 @@ std::chrono::duration<double> runMatMultiply(double* d_a, long N_a, double* d_b,
         printf("Cublas Error\n");
         exit(-1);
     }
-    std::chrono::duration<double> firstcuBlas = endcu - begincu;
+//    std::chrono::duration<double> firstcuBlas = endcu - begincu;
 //    if (tensor)
 //        std::cout << "cuBLAS Mat Tensor Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
 //    else
 //        std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
 
-    return firstcuBlas;
+//    return 0;
 }
 
 
@@ -178,17 +178,18 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 
         double * d_input_batch = d_input + i_batch * modelBatchSize;
 
-        // copy the input to the input tensor
-        cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
-        status = cudaGetLastError () ;
+        if (i_batch == 0) {
+            // copy the input to the input tensor
+            cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+            status = cudaGetLastError();
 
-        // run the graph to get the output conductances
-        tensorflow::Status runStatus = model->session->RunCallable(model->call, {model->input_tensor},
-                                                                   &(model->outputs),nullptr);
-        if (!runStatus.ok()) {
-            LOG(ERROR) << "Running model failed: " << runStatus;
+            // run the graph to get the output conductances
+            tensorflow::Status runStatus = model->session->RunCallable(model->call, {model->input_tensor},
+                                                                       &(model->outputs), nullptr);
+            if (!runStatus.ok()) {
+                LOG(ERROR) << "Running model failed: " << runStatus;
+            }
         }
-
         // get this output batches by indexing d_output
         double *d_output_batch = d_output + i_batch * modelBatchSize;
 
@@ -209,7 +210,7 @@ int main(int argc, char **argv) {
 
     struct TFModel model;
     model.numBatches = 100*100;
-    model.batchSize = 1000;
+    model.batchSize = 2000;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
     model.inputSize = 24;
