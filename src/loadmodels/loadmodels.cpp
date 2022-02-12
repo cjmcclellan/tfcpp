@@ -76,7 +76,8 @@ int main(int argc, char **argv) {
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/models/matrix6conbatch/tfmodel";
 //    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/matrix6conandt/tfmodel";
 //    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
-    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k/tfmodel";
+//    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k/tfmodel";
+    std::string PathGraph = "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/ASAP7/models/ckinvdcx20_asap7_75t_r/tfmodel";
 
     // create a session that takes our
     // scope as the root scope
@@ -97,19 +98,19 @@ int main(int argc, char **argv) {
 
     double step = (max - min) / (double) num;
 //    std::vector<Tensor> input_data[num] = {};
-    int numNodes = 24;
+    int numNodes = 87;
     typedef double T;
     Tensor input_data(tensorflow::DT_DOUBLE,tensorflow::TensorShape({num, numNodes}));
 
     auto mat = input_data.matrix<double>();
-    double val = 2.0;
+    double val = 1.0;
     double val2 = 1.0;
     for (int i = 0; i < num; i++){
         for (int j = 0; j < numNodes; j++) {
             if (j < numNodes / 2)
                 input_data.matrix<double>()(i, j) = val2;
             else
-                input_data.matrix<double>()(i, j) = val * i;
+                input_data.matrix<double>()(i, j) = val;
         }
 //        input_data.matrix<double>()(i, 1) = val2;
 //        input_data.matrix<double>()(i, 2) = val2;
@@ -136,7 +137,7 @@ int main(int argc, char **argv) {
 
 //    std::vector<string> output_nodes = {{"StatefulPartitionedCall:0"}};
 //    std::vector<string> output_nodes_two = {{"PartitionedCall:0"}};
-    std::vector<string> output_nodes = {{"PartitionedCall:0"}};
+    std::vector<string> output_nodes = {{"PartitionedCall:3"}};
     TFParams params;
     LoadModel(&params, PathGraph);
     std::vector<Tensor> predictions;

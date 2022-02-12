@@ -58,6 +58,8 @@ struct TFModel {
     tensorflow::Tensor input_tensor;
     std::vector<tensorflow::Tensor> outputs;
     tensorflow::Session::CallableHandle call;
+    tensorflow::Session::CallableHandle call2;
+
     int numBatches;
     long batchSize;
     int inputSize;
@@ -67,12 +69,16 @@ struct TFModel {
 
 void loadTFModel(struct TFModel* model){
 
-    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
+//    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
 //    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k/tfmodel";
+//    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k_flux_precon/tfmodel";
+    std::string PathGraph = "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/ASAP7/models/ckinvdcx20_asap7_75t_r/tfmodel";
+//    std::string PathGraph = "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/Impulse/24input_cube_1k/tfmodel";
     int numNodes = model->inputSize;
 
     std::string inputLayer = "serving_default_input_temperature:0";
-    std::string outputLayer = "PartitionedCall:0";
+    std::string outputLayer = "PartitionedCall:2";
+    std::string outputLayer2 = "PartitionedCall:0";
 
     // create a session that takes our
     // scope as the root scope
@@ -82,6 +88,7 @@ void loadTFModel(struct TFModel* model){
 //    tensorflow::RunOptions run_options;
     model->bundle = new tensorflow::SavedModelBundleLite();
     model->session_options.config.mutable_gpu_options()->set_allow_growth(true);
+//    model->session_options.config.mutable_gpu_options()->set_visible_device_list("0");
     tensorflow::Status load_graph_status = tensorflow::LoadSavedModel(model->session_options,
                                                                       model->run_options,
                                                                       PathGraph,
@@ -100,6 +107,18 @@ void loadTFModel(struct TFModel* model){
     opts.mutable_feed_devices()->insert({inputLayer, gpu_device_name});
     opts.mutable_fetch_devices()->insert({outputLayer, gpu_device_name});
     model->session->MakeCallable(opts, &model->call);
+
+    tensorflow::CallableOptions opts2;
+//    tensorflow::Session::CallableHandle feed_gpu_fetch_cpu;
+    opts2.add_feed(inputLayer);
+    opts2.set_fetch_skip_sync(true);
+    opts2.add_fetch(outputLayer);
+    opts2.add_fetch(outputLayer2);
+    opts2.clear_fetch_devices();
+    opts2.mutable_feed_devices()->insert({inputLayer, gpu_device_name});
+    opts2.mutable_fetch_devices()->insert({outputLayer, gpu_device_name});
+    opts2.mutable_fetch_devices()->insert({outputLayer2, gpu_device_name});
+    model->session->MakeCallable(opts2, &model->call2);
 
     tensorflow::PlatformDeviceId gpu_id(0);
     auto *allocator = new tensorflow::GPUcudaMallocAllocator(gpu_id);
@@ -178,7 +197,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 
         double * d_input_batch = d_input + i_batch * modelBatchSize;
 
-        if (i_batch == 0) {
+//        if (i_batch == 0) {
             // copy the input to the input tensor
             cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
             status = cudaGetLastError();
@@ -189,13 +208,19 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
             if (!runStatus.ok()) {
                 LOG(ERROR) << "Running model failed: " << runStatus;
             }
-        }
+//        }
         // get this output batches by indexing d_output
         double *d_output_batch = d_output + i_batch * modelBatchSize;
 
+        // run this is the tf model is outputting flux
+        cudaCopy(d_output_batch, model->outputs[0].flat<double>().data(), modelBatchSize);
+
+//        double* output = (double *) malloc(modelBatchSize * sizeof(double ));
+//        cudaMemcpy(output, model->outputs[0].flat<double>().data(), modelBatchSize * sizeof(double ), cudaMemcpyDeviceToHost);
+//        printf()
         // now run a cuda blas on the output tensors
-        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
-                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
+//        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
+//                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
     }
 
     cudaDeviceSynchronize();
@@ -208,9 +233,12 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 
 int main(int argc, char **argv) {
 
+    int * test;
+    cudaMalloc((void **)& test, 1 * sizeof(int));
+
     struct TFModel model;
-    model.numBatches = 100*100;
-    model.batchSize = 2000;
+    model.numBatches = 100;
+    model.batchSize = 200*50;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
     model.inputSize = 24;
@@ -233,17 +261,22 @@ int main(int argc, char **argv) {
 
     int print_n = model.inputSize * 4;
     // now print the input and outputs
-//    printf("input:");
-//    for(int i = 0; i < print_n; i++){
-//        if (i % model.inputSize == 0)
-//            printf("\n example:");
-//        printf("%f, ", h_input[i]);
-//    }
-//    printf("\n output:");
-//    for(int i = 0; i < print_n; i++){
-//        if (i % model.outputSize == 0)
-//            printf("\n example:");
-//        printf("%f, ", h_output[i]);
-//    }
+    double sum = 0;
+    printf("input:");
+    for(int i = 0; i < print_n; i++){
+        if (i % model.inputSize == 0)
+            printf("\n example:");
+        printf("%f, ", h_input[i]);
+    }
+    printf("\n output:");
+    for(int i = 0; i < print_n; i++){
+        if (i % model.outputSize == 0) {
+            printf("\n sum: %f", sum);
+            sum = 0;
+            printf("\n example:");
+        }
+        sum += h_output[i];
+        printf("%f, ", h_output[i]);
+    }
 
 }
