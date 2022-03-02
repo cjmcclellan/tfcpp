@@ -587,52 +587,6 @@
 					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
-			<Target title="test_tcores">
-				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/test_tcores" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="./build"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/usr/include/c++/9"/>
-					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
-					<Add directory="/usr/include/c++/9/backward"/>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/usr/include/x86_64-linux-gnu"/>
-					<Add directory="/usr/include"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 test_tcores"/>
-					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
-			<Target title="test_tcores/fast">
-				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/test_tcores" prefix_auto="0" extension_auto="0"/>
-				<Option working_dir="./build"/>
-				<Option object_output="./"/>
-				<Option type="1"/>
-				<Option compiler="gcc"/>
-				<Compiler>
-					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/usr/include/c++/9"/>
-					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
-					<Add directory="/usr/include/c++/9/backward"/>
-					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
-					<Add directory="/usr/local/include"/>
-					<Add directory="/usr/include/x86_64-linux-gnu"/>
-					<Add directory="/usr/include"/>
-				</Compiler>
-				<MakeCommands>
-					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 test_tcores/fast"/>
-					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
-					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
-					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
-				</MakeCommands>
-			</Target>
 			<Target title="test_matrix_hold">
 				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/test_matrix_hold" prefix_auto="0" extension_auto="0"/>
 				<Option working_dir="./build"/>
@@ -679,6 +633,100 @@
 					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
 				</MakeCommands>
 			</Target>
+			<Target title="test_tcores">
+				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/test_tcores" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="./build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/cuda/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 test_tcores"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="test_tcores/fast">
+				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/test_tcores" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="./build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/cuda/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 test_tcores/fast"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="multigpu">
+				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/multigpu" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="./build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/cuda/include"/>
+					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 multigpu"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="multigpu/fast">
+				<Option output="/home/deepsim/Documents/Tensorflow/tfcpp/build/multigpu" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="./build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/cuda/include"/>
+					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 multigpu/fast"/>
+					<CompileFile command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j16 -f &quot;/home/deepsim/Documents/Tensorflow/tfcpp/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
 		</Build>
 		<Unit filename="/home/deepsim/Documents/Tensorflow/tfcpp/src/loadmodels/loadmodels.cpp">
 			<Option target="loadmodels"/>
@@ -688,6 +736,9 @@
 		</Unit>
 		<Unit filename="/home/deepsim/Documents/Tensorflow/tfcpp/src/loadmodels/loadmodels_incuda.cpp">
 			<Option target="loadmodels_incuda"/>
+		</Unit>
+		<Unit filename="/home/deepsim/Documents/Tensorflow/tfcpp/src/tfcuda/multigpu.cpp">
+			<Option target="multigpu"/>
 		</Unit>
 		<Unit filename="/home/deepsim/Documents/Tensorflow/tfcpp/src/tfcuda/multiply.cu">
 			<Option target="multiply"/>

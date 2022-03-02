@@ -33,6 +33,7 @@ add_executable(tfcuda_test_matrix src/tfcuda/tfcuda_test_matrix.cpp)
 add_executable(test_matrix src/tfcuda/test_matrix.cpp)
 add_executable(test_tcores src/tfcuda/test_tcores.cpp)
 add_executable(test_copy src/tfcuda/test_copy.cpp)
+add_executable(multigpu src/tfcuda/multigpu.cpp)
 add_executable(test_matrix_hold src/tfcuda/test_matrix_hold.cpp)
 add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.cpp)
 add_executable(multiplytest src/tfcuda/multiplytest.cpp)
@@ -68,6 +69,9 @@ target_link_libraries(test_tcores multiply cublas )
 
 target_include_directories(test_copy PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(test_copy multiply cublas ${TFLIBS} )
+
+target_include_directories(multigpu PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
+target_link_libraries(multigpu multiply cublas ${TFLIBS} )
 
 target_include_directories(test_matrix_hold PRIVATE ${CUDA_INCLUDE_DIRS})
 target_link_libraries(test_matrix_hold multiply)

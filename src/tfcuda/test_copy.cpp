@@ -17,7 +17,7 @@
 #include <cuda_runtime.h>
 #include "cublas_v2.h"
 
-#include "absl/strings/match.h"
+//#include "absl/strings/match.h"
 #include "tensorflow/core/common_runtime/device_mgr.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
@@ -122,12 +122,12 @@ void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, l
 //    blasStatus = cublasSetMathMode(*handle, CUBLAS_TENSOR_OP_MATH);
 
 //    cudaDeviceSynchronize();
-//    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
 
     blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
                              &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
-//    cudaDeviceSynchronize();
-//    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
+    cudaDeviceSynchronize();
+    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
 
     if ( blasStatus != CUBLAS_STATUS_SUCCESS )
     {
@@ -135,11 +135,11 @@ void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, l
         printf("Cublas Error\n");
         exit(-1);
     }
-//    std::chrono::duration<double> firstcuBlas = endcu - begincu;
+    std::chrono::duration<double> firstcuBlas = endcu - begincu;
 //    if (tensor)
 //        std::cout << "cuBLAS Mat Tensor Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
 //    else
-//        std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
+        std::cout << "cuBLAS Mat Multiply call took = " << std::chrono::duration_cast<std::chrono::microseconds>(firstcuBlas).count() << "[us]" << std::endl;
 
 //    return 0;
 }
@@ -209,7 +209,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 int main(int argc, char **argv) {
 
     struct TFModel model;
-    model.numBatches = 100*100;
+    model.numBatches = 32;
     model.batchSize = 2000;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
@@ -221,7 +221,11 @@ int main(int argc, char **argv) {
     vector<double> h_input(model.numBatches * model.batchSize * model.inputSize);
     for(int i = 0; i < model.batchSize * model.numBatches; i++){
         for(int j = 0; j < model.inputSize; j++){
-            h_input[j + i * model.inputSize] = (double) j * i;
+//            h_input[j + i * model.inputSize] = (double) j * i;
+            if (j < 13)
+                h_input[j + i * model.inputSize] = 0;
+            else
+                h_input[j + i * model.inputSize] = -1;
         }
     }
 
@@ -233,17 +237,17 @@ int main(int argc, char **argv) {
 
     int print_n = model.inputSize * 4;
     // now print the input and outputs
-//    printf("input:");
-//    for(int i = 0; i < print_n; i++){
-//        if (i % model.inputSize == 0)
-//            printf("\n example:");
-//        printf("%f, ", h_input[i]);
-//    }
-//    printf("\n output:");
-//    for(int i = 0; i < print_n; i++){
-//        if (i % model.outputSize == 0)
-//            printf("\n example:");
-//        printf("%f, ", h_output[i]);
-//    }
+    printf("input:");
+    for(int i = 0; i < print_n; i++){
+        if (i % model.inputSize == 0)
+            printf("\n example:");
+        printf("%f, ", h_input[i]);
+    }
+    printf("\n output:");
+    for(int i = 0; i < print_n; i++){
+        if (i % model.outputSize == 0)
+            printf("\n example:");
+        printf("%f, ", h_output[i]);
+    }
 
 }

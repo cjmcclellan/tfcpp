@@ -276,6 +276,19 @@ test_matrix/fast:
 .PHONY : test_matrix/fast
 
 #=============================================================================
+# Target rules for targets named test_matrix_hold
+
+# Build rule for target.
+test_matrix_hold: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_matrix_hold
+.PHONY : test_matrix_hold
+
+# fast build rule for target.
+test_matrix_hold/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/build
+.PHONY : test_matrix_hold/fast
+
+#=============================================================================
 # Target rules for targets named test_tcores
 
 # Build rule for target.
@@ -289,17 +302,17 @@ test_tcores/fast:
 .PHONY : test_tcores/fast
 
 #=============================================================================
-# Target rules for targets named test_matrix_hold
+# Target rules for targets named multigpu
 
 # Build rule for target.
-test_matrix_hold: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_matrix_hold
-.PHONY : test_matrix_hold
+multigpu: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 multigpu
+.PHONY : multigpu
 
 # fast build rule for target.
-test_matrix_hold/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_matrix_hold.dir/build.make CMakeFiles/test_matrix_hold.dir/build
-.PHONY : test_matrix_hold/fast
+multigpu/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/multigpu.dir/build.make CMakeFiles/multigpu.dir/build
+.PHONY : multigpu/fast
 
 src/loadmodels/loadmodels.o: src/loadmodels/loadmodels.cpp.o
 .PHONY : src/loadmodels/loadmodels.o
@@ -348,6 +361,30 @@ src/loadmodels/loadmodels_incuda.s: src/loadmodels/loadmodels_incuda.cpp.s
 src/loadmodels/loadmodels_incuda.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/loadmodels_incuda.dir/build.make CMakeFiles/loadmodels_incuda.dir/src/loadmodels/loadmodels_incuda.cpp.s
 .PHONY : src/loadmodels/loadmodels_incuda.cpp.s
+
+src/tfcuda/multigpu.o: src/tfcuda/multigpu.cpp.o
+.PHONY : src/tfcuda/multigpu.o
+
+# target to build an object file
+src/tfcuda/multigpu.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/multigpu.dir/build.make CMakeFiles/multigpu.dir/src/tfcuda/multigpu.cpp.o
+.PHONY : src/tfcuda/multigpu.cpp.o
+
+src/tfcuda/multigpu.i: src/tfcuda/multigpu.cpp.i
+.PHONY : src/tfcuda/multigpu.i
+
+# target to preprocess a source file
+src/tfcuda/multigpu.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/multigpu.dir/build.make CMakeFiles/multigpu.dir/src/tfcuda/multigpu.cpp.i
+.PHONY : src/tfcuda/multigpu.cpp.i
+
+src/tfcuda/multigpu.s: src/tfcuda/multigpu.cpp.s
+.PHONY : src/tfcuda/multigpu.s
+
+# target to generate assembly for a file
+src/tfcuda/multigpu.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/multigpu.dir/build.make CMakeFiles/multigpu.dir/src/tfcuda/multigpu.cpp.s
+.PHONY : src/tfcuda/multigpu.cpp.s
 
 src/tfcuda/multiply.o: src/tfcuda/multiply.cu.o
 .PHONY : src/tfcuda/multiply.o
@@ -647,6 +684,7 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... loadmodels"
 	@echo "... loadmodels_incuda"
+	@echo "... multigpu"
 	@echo "... multiply"
 	@echo "... multiplytest"
 	@echo "... test_copy"
@@ -665,6 +703,9 @@ help:
 	@echo "... src/loadmodels/loadmodels_incuda.o"
 	@echo "... src/loadmodels/loadmodels_incuda.i"
 	@echo "... src/loadmodels/loadmodels_incuda.s"
+	@echo "... src/tfcuda/multigpu.o"
+	@echo "... src/tfcuda/multigpu.i"
+	@echo "... src/tfcuda/multigpu.s"
 	@echo "... src/tfcuda/multiply.o"
 	@echo "... src/tfcuda/multiply.i"
 	@echo "... src/tfcuda/multiply.s"
