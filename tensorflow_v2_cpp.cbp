@@ -132,7 +132,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -155,7 +155,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -178,7 +178,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/local/cuda/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
@@ -202,7 +202,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/local/cuda/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
@@ -227,7 +227,7 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -251,7 +251,7 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -274,7 +274,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -297,7 +297,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -320,7 +320,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -343,7 +343,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -410,7 +410,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/local/cuda/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
@@ -434,7 +434,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/local/cuda/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
@@ -458,7 +458,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -481,7 +481,7 @@
 				<Option type="1"/>
 				<Option compiler="gcc"/>
 				<Compiler>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -687,7 +687,7 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
@@ -711,7 +711,7 @@
 				<Option compiler="gcc"/>
 				<Compiler>
 					<Add directory="/usr/local/cuda/include"/>
-					<Add directory="/home/deepsim/Documents/Tensorflow/tfinstall/include"/>
+					<Add directory="/home/deepsim/Documents/DeepSim/TF/tensorflow/bazel-bin/tensorflow/include"/>
 					<Add directory="/usr/include/c++/9"/>
 					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
 					<Add directory="/usr/include/c++/9/backward"/>
