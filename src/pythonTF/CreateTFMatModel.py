@@ -25,7 +25,7 @@ def buildModel(N, dtype=tf.double):
 
     return keras.Model(
         inputs=[t_in],
-        outputs=[t_output_samples, temperature_response_mat],
+        outputs=[temperature_response_mat, t_output_samples],
     )
 
 
