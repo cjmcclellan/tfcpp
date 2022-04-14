@@ -102,22 +102,38 @@ void matrixMultiplication(DTYPE *a, DTYPE *b, DTYPE *d_c, int N, bool timeFunc){
 }
 
 
-__global__ void cudaCopyKernel(DTYPE * des, DTYPE * src, const long N){
+__global__ void cudaDCopyKernel(double * des, double * src, const long N){
     int tx = blockIdx.x * blockDim.x + threadIdx.x;
     if(tx<N)
         des[tx]=src[tx];
 }
 
-void cudaCopy(DTYPE *des, DTYPE* src, long N){
+__global__ void cudaFCopyKernel(float * des, float * src, const long N){
+    int tx = blockIdx.x * blockDim.x + threadIdx.x;
+    if(tx<N)
+        des[tx]=src[tx];
+}
+
+
+void cudaDCopy(double *des, double* src, long N){
     unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
     dim3 dimGrid(grid_cols, 1);
     dim3 dimBlock(BLOCK_SIZE, 1);
 
-    cudaCopyKernel<<<dimGrid,dimBlock>>>(des, src, N);
+    cudaDCopyKernel<<<dimGrid,dimBlock>>>(des, src, N);
     cudaDeviceSynchronize();
 
 }
 
+void cudaFCopy(float *des, float* src, long N){
+    unsigned int grid_cols = (N + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 dimGrid(grid_cols, 1);
+    dim3 dimBlock(BLOCK_SIZE, 1);
+
+    cudaFCopyKernel<<<dimGrid,dimBlock>>>(des, src, N);
+    cudaDeviceSynchronize();
+
+}
 
 __global__ void gpuPrintfKernel(double* dev_ptr, long N){
     int i = blockIdx.x * blockDim.x + threadIdx.x;

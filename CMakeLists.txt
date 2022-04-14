@@ -51,16 +51,16 @@ message("Cuda include " ${CUDA_INCLUDE_DIRS})
 target_include_directories(loadmodels_incuda PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(loadmodels_incuda PRIVATE ${TFLIBS})
 #
-target_include_directories(tfcuda_test  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+target_include_directories(tfcuda_test  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(tfcuda_test ${TFLIBS} multiply)
 
-#target_include_directories(tftest  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+#target_include_directories(tftest  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 #target_link_libraries(tftest ${TFLIBS})
 
-target_include_directories(tfcuda_test_cpu  PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+target_include_directories(tfcuda_test_cpu  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(tfcuda_test_cpu ${TFLIBS} multiply)
 
-target_include_directories(tfcuda_test_matrix PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+target_include_directories(tfcuda_test_matrix PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(tfcuda_test_matrix ${TFLIBS} multiply)
 
 target_include_directories(test_matrix PRIVATE ${CUDA_INCLUDE_DIRS})
@@ -81,7 +81,7 @@ target_link_libraries(multigpu multiply cublas ${TFLIBS} )
 target_include_directories(test_matrix_hold PRIVATE ${CUDA_INCLUDE_DIRS})
 target_link_libraries(test_matrix_hold multiply)
 
-target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include)
+target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(tfcuda_test_matrix_testing ${TFLIBS} multiply)
 
 
@@ -96,5 +96,5 @@ target_link_libraries(loadmodels ${TFLIBS})
 
 # working with cuda called in tensorflow
 
-add_executable(test_cuda_h src/tfcuda/test_cuda_h.cpp)
-target_link_libraries(test_cuda_h PRIVATE multiply)
+#add_executable(test_cuda_h src/tfcuda/test_cuda_h.cpp)
+#target_link_libraries(test_cuda_h PRIVATE multiply)

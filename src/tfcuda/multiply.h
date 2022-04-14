@@ -9,7 +9,8 @@
 
 void multiplyPointer(DTYPE *d_a, DTYPE *d_b, DTYPE *d_c);
 
-void cudaCopy(DTYPE* des, DTYPE* src, long N);
+void cudaDCopy(double* des, double* src, long N);
+void cudaFCopy(float* des, float* src, long N);
 
 int multiply(DTYPE a, DTYPE b);
 

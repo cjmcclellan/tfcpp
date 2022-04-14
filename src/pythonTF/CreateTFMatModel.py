@@ -25,7 +25,7 @@ def buildModel(N, dtype=tf.double):
 
     return keras.Model(
         inputs=[t_in],
-        outputs=[t_output_samples],
+        outputs=[t_output_samples, temperature_response_mat],
     )
 
 
@@ -37,8 +37,14 @@ def saveModel(model, save_path):
 
 
 if __name__ == '__main__':
-    modelSizes = [1e2, 1e3, 1e4]
+    modelSizes = [1e2, 1e3]
     for N in modelSizes:
         N = int(N)
-        model = buildModel(N)
-        saveModel(model, './testModel_N={0}'.format(N))
+
+        # create and save the double
+        model = buildModel(N, tf.double)
+        saveModel(model, './testDModel_N={0}'.format(N))
+
+        # create and save the float
+        model = buildModel(N, tf.float32)
+        saveModel(model, './testFModel_N={0}'.format(N))

@@ -4,5 +4,5 @@
 /venv/
 /.cmake/
 /build/
-/src/pythonTF/testModel_N*
+/src/pythonTF/test?Model_N*
 /models/

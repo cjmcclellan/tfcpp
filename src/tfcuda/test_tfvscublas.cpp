@@ -34,9 +34,15 @@
 #include "tensorflow/core/common_runtime/device/device_id.h"
 
 #include "tensorflow/cc/saved_model/loader.h"
+#define useFloat
 
+#ifdef useFloat
 #define DTYPE float
-
+#define TF_DTYPE tensorflow::DT_FLOAT
+#else
+#define DTYPE double
+#define TF_DTYPE tensorflow::DT_DOUBLE
+#endif
 using namespace std;
 
 std::string GPUDeviceName(tensorflow::Session* session) {
@@ -71,8 +77,13 @@ void loadTFModel(struct TFModel* model){
 
     int numNodes = model->inputSize;
 
-    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/testModel_N=" + std::to_string(numNodes) + "/tfmodel";
-//    std::string PathGraph = "/home/tfcpp/src/pythonTF/testModel_N=" + std::to_string(numNodes) + "/tfmodel";
+#ifdef useFloat
+    std::string _type = "F";
+#else
+    std::string _type = "D";
+#endif
+    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
+//    std::string PathGraph = "/home/tfcpp/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
 
     std::string inputLayer = "serving_default_input:0";
     std::string outputLayer = "PartitionedCall:0";
@@ -107,18 +118,18 @@ void loadTFModel(struct TFModel* model){
 
     tensorflow::PlatformDeviceId gpu_id(0);
     auto *allocator = new tensorflow::GPUcudaMallocAllocator(gpu_id);
-    model->input_tensor = tensorflow::Tensor(allocator, tensorflow::DT_DOUBLE,
+    model->input_tensor = tensorflow::Tensor(allocator, TF_DTYPE,
                                            tensorflow::TensorShape({model->batchSize, numNodes}));
 }
 
 
-void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, long N_c,
+void runMatMultiply(DTYPE* d_a, long N_a, DTYPE* d_b, long N_b, DTYPE* d_c, long N_c,
                                              int batchSize, bool tensor, cublasHandle_t* handle){
     // clear error status
 
     // create the handle
-    const double alpha = 1.0f;
-    const double beta = 0.0f;
+    const DTYPE alpha = 1.0f;
+    const DTYPE beta = 0.0f;
     cublasStatus_t blasStatus;
 
     // Set the math mode to allow cuBLAS to use Tensor Cores:
@@ -128,8 +139,13 @@ void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, l
 //    cudaDeviceSynchronize();
 //    std::chrono::steady_clock::time_point begincu = std::chrono::steady_clock::now();
 
+#ifdef useFloat
+    blasStatus = cublasSgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
+                             &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
+#else
     blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
                              &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
+#endif
 //    cudaDeviceSynchronize();
 //    std::chrono::steady_clock::time_point endcu = std::chrono::steady_clock::now();
 
@@ -149,7 +165,7 @@ void runMatMultiply(double* d_a, long N_a, double* d_b, long N_b, double* d_c, l
 }
 
 
-void computeOutput(struct TFModel* model, double * h_input, double * h_output){
+void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
 
     int totalInputN = model->numBatches * model->batchSize * model->inputSize;
     int totalOutputN = model->numBatches * model->batchSize * model->outputSize;
@@ -159,16 +175,16 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 
     // load the input and allocated the output
     cudaError_t status;
-    double * d_input;
-    status = cudaMalloc((void **)&d_input, totalInputN * sizeof(double));
-    CUDAMALLOCCHECK(d_input, totalInputN, double, status);
-    status = cudaMemcpy(d_input, h_input, totalInputN * sizeof(double ), cudaMemcpyHostToDevice);
-    CUDAMEMCPYCHECK(d_input, totalInputN, double, status);
+    DTYPE * d_input;
+    status = cudaMalloc((void **)&d_input, totalInputN * sizeof(DTYPE));
+    CUDAMALLOCCHECK(d_input, totalInputN, DTYPE, status);
+    status = cudaMemcpy(d_input, h_input, totalInputN * sizeof(DTYPE ), cudaMemcpyHostToDevice);
+    CUDAMEMCPYCHECK(d_input, totalInputN, DTYPE, status);
 
     // create output and allocate space for all the outputs
-    double* d_output;
-    status = cudaMalloc((void **)&d_output, totalOutputN * sizeof(double));
-    CUDAMALLOCCHECK(d_output, totalOutputN, double, status)
+    DTYPE* d_output;
+    status = cudaMalloc((void **)&d_output, totalOutputN * sizeof(DTYPE));
+    CUDAMALLOCCHECK(d_output, totalOutputN, DTYPE, status)
 
     // init the handle
     cublasHandle_t handle;
@@ -180,11 +196,15 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
     for (int i_batch = 0; i_batch < model->numBatches; i_batch++) {
         status = cudaGetLastError () ;
 
-        double * d_input_batch = d_input + i_batch * modelBatchSize;
+        DTYPE * d_input_batch = d_input + i_batch * modelBatchSize;
 
 //        if (i_batch == 0) {
             // copy the input to the input tensor
-            cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+#ifdef useFloat
+            cudaFCopy(model->input_tensor.flat<DTYPE>().data(), d_input_batch, modelBatchSize);
+#else
+        cudaDCopy(model->input_tensor.flat<DTYPE>().data(), d_input_batch, modelBatchSize);
+#endif
             status = cudaGetLastError();
 
             // run the graph to get the output conductances
@@ -195,20 +215,24 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
             }
 //        }
         // get this output batches by indexing d_output
-        double *d_output_batch = d_output + i_batch * modelBatchSize;
+        DTYPE *d_output_batch = d_output + i_batch * modelBatchSize;
 
         // run this is the tf model is outputting flux
-        double * b = model->outputs[0].flat<double>().data();
-//        double * a = model->outputs[1].flat<double>().data();
-//        double * c = model->outputs[2].flat<double>().data();
-//        gpuPrintf(model->outputs[0].flat<double>().data(), model->batchSize * model->outputSize);
-        cudaCopy(d_output_batch, model->outputs[0].flat<double>().data(), modelBatchSize);
+        DTYPE * b = model->outputs[0].flat<DTYPE>().data();
+//        DTYPE * a = model->outputs[1].flat<DTYPE>().data();
+//        DTYPE * c = model->outputs[2].flat<DTYPE>().data();
+//        gpuPrintf(model->outputs[0].flat<DTYPE>().data(), model->batchSize * model->outputSize);
+#ifdef useFloat
+        cudaFCopy(d_output_batch, model->outputs[0].flat<DTYPE>().data(), modelBatchSize);
+#else
+        cudaDCopy(d_output_batch, model->outputs[0].flat<DTYPE>().data(), modelBatchSize);
+#endif
 
-//        double* output = (double *) malloc(modelBatchSize * sizeof(double ));
-//        cudaMemcpy(output, model->outputs[0].flat<double>().data(), modelBatchSize * sizeof(double ), cudaMemcpyDeviceToHost);
+//        DTYPE* output = (DTYPE *) malloc(modelBatchSize * sizeof(DTYPE ));
+//        cudaMemcpy(output, model->outputs[0].flat<DTYPE>().data(), modelBatchSize * sizeof(DTYPE ), cudaMemcpyDeviceToHost);
 //        printf()
         // now run a cuda blas on the output tensors
-//        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
+//        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<DTYPE>().data(), model->inputSize,
 //                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
     }
 
@@ -216,7 +240,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Run took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
-    cudaMemcpy(h_output, d_output, totalOutputN * sizeof(double), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_output, d_output, totalOutputN * sizeof(DTYPE), cudaMemcpyDeviceToHost);
 
 }
 
@@ -227,33 +251,33 @@ int main(int argc, char **argv) {
 
     struct TFModel model;
     model.numBatches = 10;
-    model.batchSize = 20;
+    model.batchSize = 1000;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
-    model.inputSize = 10000;
-    model.outputSize = 10000;
+    model.inputSize = 100;
+    model.outputSize = 100;
     loadTFModel(&model);
 
     // load the h_input vector
-    vector<double> h_input(model.numBatches * model.batchSize * model.inputSize);
+    vector<DTYPE> h_input(model.numBatches * model.batchSize * model.inputSize);
     for(int i = 0; i < model.batchSize * model.numBatches; i++){
         for(int j = 0; j < model.inputSize; j++){
             if (j == 0)
-                h_input[j + i * model.inputSize] = (double) 1.0;
+                h_input[j + i * model.inputSize] = (DTYPE) 1.0;
             else
-                h_input[j + i * model.inputSize] = (double) 1.0;
+                h_input[j + i * model.inputSize] = (DTYPE) 1.0;
         }
     }
 
     // init the output vector
-    vector<double> h_output(model.numBatches * model.batchSize * model.outputSize);
+    vector<DTYPE> h_output(model.numBatches * model.batchSize * model.outputSize);
 
     // now run the model
     computeOutput(&model, &h_input[0], &h_output[0]);
 
     int print_n = 50;
     // now print the input and outputs
-    double sum = 0;
+    DTYPE sum = 0;
     printf("input:");
     for(int i = 0; i < print_n; i++){
         if (i % model.inputSize == 0)
