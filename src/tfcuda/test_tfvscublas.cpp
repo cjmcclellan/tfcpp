@@ -69,16 +69,12 @@ struct TFModel {
 
 void loadTFModel(struct TFModel* model){
 
-//    std::string PathGraph = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
-//    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k/tfmodel";
-//    std::string PathGraph = "/home/connor/Documents/DeepSim/SPICE/cuspice/ngspice/src/deepsim/models/24input_cube_1k_flux_precon/tfmodel";
-    std::string PathGraph = "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/ASAP7/models/ckinvdcx20_asap7_75t_r/tfmodel";
-//    std::string PathGraph = "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/Impulse/24input_cube_1k/tfmodel";
     int numNodes = model->inputSize;
 
-    std::string inputLayer = "serving_default_input_temperature:0";
-    std::string outputLayer = "PartitionedCall:2";
-    std::string outputLayer2 = "PartitionedCall:0";
+    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/testModel_N=" + std::to_string(numNodes) + "/tfmodel";
+
+    std::string inputLayer = "serving_default_input:0";
+    std::string outputLayer = "PartitionedCall:0";
 
     // create a session that takes our
     // scope as the root scope
@@ -107,18 +103,6 @@ void loadTFModel(struct TFModel* model){
     opts.mutable_feed_devices()->insert({inputLayer, gpu_device_name});
     opts.mutable_fetch_devices()->insert({outputLayer, gpu_device_name});
     model->session->MakeCallable(opts, &model->call);
-
-    tensorflow::CallableOptions opts2;
-//    tensorflow::Session::CallableHandle feed_gpu_fetch_cpu;
-    opts2.add_feed(inputLayer);
-    opts2.set_fetch_skip_sync(true);
-    opts2.add_fetch(outputLayer);
-    opts2.add_fetch(outputLayer2);
-    opts2.clear_fetch_devices();
-    opts2.mutable_feed_devices()->insert({inputLayer, gpu_device_name});
-    opts2.mutable_fetch_devices()->insert({outputLayer, gpu_device_name});
-    opts2.mutable_fetch_devices()->insert({outputLayer2, gpu_device_name});
-    model->session->MakeCallable(opts2, &model->call2);
 
     tensorflow::PlatformDeviceId gpu_id(0);
     auto *allocator = new tensorflow::GPUcudaMallocAllocator(gpu_id);
@@ -203,7 +187,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
             status = cudaGetLastError();
 
             // run the graph to get the output conductances
-            tensorflow::Status runStatus = model->session->RunCallable(model->call2, {model->input_tensor},
+            tensorflow::Status runStatus = model->session->RunCallable(model->call, {model->input_tensor},
                                                                        &(model->outputs), nullptr);
             if (!runStatus.ok()) {
                 LOG(ERROR) << "Running model failed: " << runStatus;
@@ -216,7 +200,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
         double * b = model->outputs[0].flat<double>().data();
 //        double * a = model->outputs[1].flat<double>().data();
 //        double * c = model->outputs[2].flat<double>().data();
-        gpuPrintf(model->outputs[1].flat<double>().data(), model->batchSize * model->outputSize * 2);
+//        gpuPrintf(model->outputs[0].flat<double>().data(), model->batchSize * model->outputSize);
         cudaCopy(d_output_batch, model->outputs[0].flat<double>().data(), modelBatchSize);
 
 //        double* output = (double *) malloc(modelBatchSize * sizeof(double ));
@@ -245,8 +229,8 @@ int main(int argc, char **argv) {
     model.batchSize = 1*1;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
-    model.inputSize = 87;
-    model.outputSize = 2344;
+    model.inputSize = 100;
+    model.outputSize = 100;
     loadTFModel(&model);
 
     // load the h_input vector
@@ -256,7 +240,7 @@ int main(int argc, char **argv) {
             if (j == 0)
                 h_input[j + i * model.inputSize] = (double) 1.0;
             else
-                h_input[j + i * model.inputSize] = (double) 0;
+                h_input[j + i * model.inputSize] = (double) 1.0;
         }
     }
 
@@ -266,7 +250,7 @@ int main(int argc, char **argv) {
     // now run the model
     computeOutput(&model, &h_input[0], &h_output[0]);
 
-    int print_n = model.inputSize * 4;
+    int print_n = model.inputSize;
     // now print the input and outputs
     double sum = 0;
     printf("input:");
