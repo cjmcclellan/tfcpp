@@ -72,6 +72,7 @@ void loadTFModel(struct TFModel* model){
     int numNodes = model->inputSize;
 
     std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/testModel_N=" + std::to_string(numNodes) + "/tfmodel";
+//    std::string PathGraph = "/home/tfcpp/src/pythonTF/testModel_N=" + std::to_string(numNodes) + "/tfmodel";
 
     std::string inputLayer = "serving_default_input:0";
     std::string outputLayer = "PartitionedCall:0";
@@ -225,12 +226,12 @@ int main(int argc, char **argv) {
     cudaMalloc((void **)& test, 1 * sizeof(int));
 
     struct TFModel model;
-    model.numBatches = 1;
-    model.batchSize = 1*1;
+    model.numBatches = 10;
+    model.batchSize = 20;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
-    model.inputSize = 100;
-    model.outputSize = 100;
+    model.inputSize = 10000;
+    model.outputSize = 10000;
     loadTFModel(&model);
 
     // load the h_input vector
@@ -250,7 +251,7 @@ int main(int argc, char **argv) {
     // now run the model
     computeOutput(&model, &h_input[0], &h_output[0]);
 
-    int print_n = model.inputSize;
+    int print_n = 50;
     // now print the input and outputs
     double sum = 0;
     printf("input:");
