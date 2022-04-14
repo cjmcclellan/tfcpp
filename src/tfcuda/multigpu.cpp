@@ -240,7 +240,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output, i
 
         if (i_batch == 0) {
             // copy the input to the input tensor
-            cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+            cudaDCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
             status = cudaGetLastError();
 
             // run the graph to get the output conductances

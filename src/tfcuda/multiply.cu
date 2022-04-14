@@ -135,6 +135,7 @@ void cudaFCopy(float *des, float* src, long N){
 
 }
 
+
 __global__ void gpuPrintfKernel(double* dev_ptr, long N){
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i == 0)

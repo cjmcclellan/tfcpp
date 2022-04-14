@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.13)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
 project(tensorflow_v2_cpp LANGUAGES C CXX CUDA)
@@ -26,20 +26,20 @@ set(TFLIBS ${TENSORFLOW_LIB_DIR}/libtensorflow_cc.so ${TENSORFLOW_LIB_DIR}/libte
 #add_executable(test src/test/test.cpp)
 add_executable(loadmodels src/loadmodels/loadmodels.cpp)
 add_executable(loadmodels_incuda src/loadmodels/loadmodels_incuda.cpp)
-add_executable(tfcuda_test src/tfcuda/tfcuda_test_own.cpp)
+#add_executable(tfcuda_test src/tfcuda/tfcuda_test_own.cpp)
 #add_executable(tftest src/tfcuda/tftest.cpp)
-add_executable(tfcuda_test_cpu src/tfcuda/tfcuda_test_own_cpustage.cpp)
-add_executable(tfcuda_test_matrix src/tfcuda/tfcuda_test_matrix.cpp)
-add_executable(test_matrix src/tfcuda/test_matrix.cpp)
+#add_executable(tfcuda_test_cpu src/tfcuda/tfcuda_test_own_cpustage.cpp)
+#add_executable(tfcuda_test_matrix src/tfcuda/tfcuda_test_matrix.cpp)
+#add_executable(test_matrix src/tfcuda/test_matrix.cpp)
 add_executable(test_tcores src/tfcuda/test_tcores.cpp)
 add_executable(test_copy src/tfcuda/test_copy.cpp)
 add_executable(test_tfvscublas src/tfcuda/test_tfvscublas.cpp)
 add_executable(multigpu src/tfcuda/multigpu.cpp)
 add_executable(test_matrix_hold src/tfcuda/test_matrix_hold.cpp)
-add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.cpp)
-add_executable(multiplytest src/tfcuda/multiplytest.cpp)
+#add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.cpp)
+#add_executable(multiplytest src/tfcuda/multiplytest.cpp)
 add_executable(testmat src/tfcuda/testmat.cu)
-add_executable(threads src/tfcuda/threads.cpp)
+#add_executable(threads src/tfcuda/threads.cpp)
 
 
 #target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -51,26 +51,26 @@ message("Cuda include " ${CUDA_INCLUDE_DIRS})
 target_include_directories(loadmodels_incuda PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 target_link_libraries(loadmodels_incuda PRIVATE ${TFLIBS})
 #
-target_include_directories(tfcuda_test  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
-target_link_libraries(tfcuda_test ${TFLIBS} multiply)
+#target_include_directories(tfcuda_test  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
+#target_link_libraries(tfcuda_test ${TFLIBS} multiply)
 
 #target_include_directories(tftest  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 #target_link_libraries(tftest ${TFLIBS})
 
-target_include_directories(tfcuda_test_cpu  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
-target_link_libraries(tfcuda_test_cpu ${TFLIBS} multiply)
+#target_include_directories(tfcuda_test_cpu  PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
+#target_link_libraries(tfcuda_test_cpu ${TFLIBS} multiply)
 
-target_include_directories(tfcuda_test_matrix PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
-target_link_libraries(tfcuda_test_matrix ${TFLIBS} multiply)
+#target_include_directories(tfcuda_test_matrix PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
+#target_link_libraries(tfcuda_test_matrix ${TFLIBS} multiply)
 
-target_include_directories(test_matrix PRIVATE ${CUDA_INCLUDE_DIRS})
-target_link_libraries(test_matrix multiply)
+#target_include_directories(test_matrix PRIVATE ${CUDA_INCLUDE_DIRS})
+#target_link_libraries(test_matrix multiply)
 
 target_include_directories(test_tcores PRIVATE ${CUDA_INCLUDE_DIRS})
-target_link_libraries(test_tcores multiply cublas )
+target_link_libraries(test_tcores multiply cublas)
 
 target_include_directories(test_copy PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
-target_link_libraries(test_copy multiply cublas ${TFLIBS} )
+target_link_libraries(test_copy multiply cublas ${TFLIBS})
 
 target_include_directories(test_tfvscublas PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(test_tfvscublas multiply cublas ${TFLIBS})
@@ -81,11 +81,11 @@ target_link_libraries(multigpu multiply cublas ${TFLIBS} )
 target_include_directories(test_matrix_hold PRIVATE ${CUDA_INCLUDE_DIRS})
 target_link_libraries(test_matrix_hold multiply)
 
-target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
-target_link_libraries(tfcuda_test_matrix_testing ${TFLIBS} multiply)
+#target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
+#target_link_libraries(tfcuda_test_matrix_testing ${TFLIBS} multiply)
 
 
-target_link_libraries(multiplytest multiply)
+#target_link_libraries(multiplytest multiply)
 
 #
 #target_link_libraries(test ${TFLIBS})

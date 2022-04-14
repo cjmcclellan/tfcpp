@@ -199,7 +199,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 
 //        if (i_batch == 0) {
             // copy the input to the input tensor
-            cudaCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+            cudaDCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
             status = cudaGetLastError();
 
             // run the graph to get the output conductances
@@ -217,7 +217,7 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output){
 //        double * a = model->outputs[1].flat<double>().data();
 //        double * c = model->outputs[2].flat<double>().data();
         gpuPrintf(model->outputs[1].flat<double>().data(), model->batchSize * model->outputSize * 2);
-        cudaCopy(d_output_batch, model->outputs[0].flat<double>().data(), modelBatchSize);
+        cudaDCopy(d_output_batch, model->outputs[0].flat<double>().data(), modelBatchSize);
 
 //        double* output = (double *) malloc(modelBatchSize * sizeof(double ));
 //        cudaMemcpy(output, model->outputs[0].flat<double>().data(), modelBatchSize * sizeof(double ), cudaMemcpyDeviceToHost);
