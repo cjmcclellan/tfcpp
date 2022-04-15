@@ -138,8 +138,8 @@ void loadTFModel(struct TFModel* model){
 }
 
 
-void runMatMultiply(DTYPE* d_a, long N_a, DTYPE* d_b, long N_b, DTYPE* d_c, long N_c,
-                                             int batchSize, bool tensor, cublasHandle_t* handle){
+void runMatMultiply(DTYPE* d_a, long m, DTYPE* d_b, long n, DTYPE* d_c, long k, long lda, long ldb, long ldc,
+                    bool tensor, cublasHandle_t* handle){
     // clear error status
 
     // create the handle
@@ -155,8 +155,10 @@ void runMatMultiply(DTYPE* d_a, long N_a, DTYPE* d_b, long N_b, DTYPE* d_c, long
     blasStatus = cublasSgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
                              &alpha, d_a, N_a, N_b, d_b, N_b, N_b * N_b, &beta, d_c, N_a, N_c, batchSize);
 #else
-    blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
-                             &alpha, d_a, N_a, N_b, d_b, N_b, 0, &beta, d_c, N_a, N_c, batchSize);
+//    blasStatus = cublasDgemmStridedBatched(*handle, CUBLAS_OP_N, CUBLAS_OP_N, N_a, N_b, N_c,
+//                             &alpha, d_a, N_a, N_b, d_b, N_b, 0, &beta, d_c, N_a, N_c, batchSize);
+    blasStatus = cublasDgemm(*handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k,
+                             &alpha, d_a, lda, d_b, ldb, &beta, d_c, ldc);
 #endif
     cudaDeviceSynchronize();
 
@@ -199,8 +201,10 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
     if (!runStatus.ok()) {
         LOG(ERROR) << "Getting matrix failed: " << runStatus;
     }
-    cudaMemcpy(d_mat, model->outputs[0].flat<DTYPE>().data(), model->inputSize * model->outputSize * sizeof(DTYPE ), cudaMemcpyDeviceToDevice);
-//    gpuPrintf(d_mat, model->inputSize * model->outputSize);
+    cudaMemcpy(d_mat, model->outputs[0].flat<DTYPE>().data(),
+               model->inputSize * model->outputSize * sizeof(DTYPE ),
+               cudaMemcpyDeviceToDevice);
+
     // init the handle
     cublasHandle_t handle;
     cublasCreate(&handle);
@@ -244,6 +248,9 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
 #endif
 
     }
+    vector<DTYPE> h_outputtf(model->numBatches * model->batchSize * model->outputSize);
+    cudaMemcpy(&h_outputtf[0], d_output, totalOutputN * sizeof(DTYPE), cudaMemcpyDeviceToHost);
+
     cudaDeviceSynchronize();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "TF Run took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
@@ -259,17 +266,29 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
         DTYPE *d_output_batch = d_output + i_batch * modelBatchSize;
 
         // run the graph to get the output conductances
-        runMatMultiply(d_input_batch, 1, d_mat, model->inputSize,
-                       d_output_batch, model->outputSize, model->batchSize, true, &handle);
+        runMatMultiply(d_input_batch, model->batchSize, d_mat, model->outputSize,
+                       d_output_batch, model->inputSize, model->batchSize, model->inputSize,
+                       model->batchSize,true, &handle);
 
     }
     cudaDeviceSynchronize();
     std::chrono::steady_clock::time_point endBlas = std::chrono::steady_clock::now();
     std::cout << "Cublas Run took = " << std::chrono::duration_cast<std::chrono::milliseconds>(endBlas - beginBlas).count() << "[ms]" << std::endl;
 
-
     cudaMemcpy(h_output, d_output, totalOutputN * sizeof(DTYPE), cudaMemcpyDeviceToHost);
 
+    DTYPE error = 0.0;
+    for(int i = 0; i < totalOutputN; i++){
+        error = h_output[i] - h_outputtf[i];
+    }
+    printf("\n Total error %f. Avg error %f \n", error, error / totalOutputN);
+
+    vector<DTYPE> h_mat(50);
+    cudaMemcpy(&h_mat[0], d_mat, 50 * sizeof(DTYPE), cudaMemcpyDeviceToHost);
+    for(int i = 0; i < 50; i++){
+        printf("%f, ", h_mat[i]);
+    }
+    printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -290,10 +309,7 @@ int main(int argc, char **argv) {
     vector<DTYPE> h_input(model.numBatches * model.batchSize * model.inputSize);
     for(int i = 0; i < model.batchSize * model.numBatches; i++){
         for(int j = 0; j < model.inputSize; j++){
-            if (j == 0)
-                h_input[j + i * model.inputSize] = (DTYPE) 1.0;
-            else
-                h_input[j + i * model.inputSize] = (DTYPE) 1.0;
+            h_input[j + i * model.inputSize] = (DTYPE) 1.0;
         }
     }
 
