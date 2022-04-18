@@ -37,7 +37,7 @@ def saveModel(model, save_path):
 
 
 if __name__ == '__main__':
-    modelSizes = [1e2, 1e3]
+    modelSizes = [1e2, 1e3, 1e4]
     for N in modelSizes:
         N = int(N)
 
