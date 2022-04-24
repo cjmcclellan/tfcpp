@@ -18,10 +18,10 @@ class ConstantLayer(keras.layers.Layer):
 def buildModel(N, dtype=tf.double):
 
     mat = np.random.random((N, N))
-
+    B = N
     t_in = keras.Input(shape=(N,), dtype=dtype, name="input")
     temperature_response_mat = ConstantLayer(mat, dtype=dtype, name="matrix")(t_in)
-    t_output_samples = tf.linalg.matvec(temperature_response_mat, t_in)
+    t_output_samples = tf.linalg.matmul(t_in, tf.linalg.matrix_transpose(temperature_response_mat))
 
     return keras.Model(
         inputs=[t_in],
@@ -37,7 +37,7 @@ def saveModel(model, save_path):
 
 
 if __name__ == '__main__':
-    modelSizes = [1e2, 1e3]
+    modelSizes = [2000, 16000]
     for N in modelSizes:
         N = int(N)
 
@@ -46,5 +46,5 @@ if __name__ == '__main__':
         saveModel(model, './testDModel_N={0}'.format(N))
 
         # create and save the float
-        model = buildModel(N, tf.float32)
-        saveModel(model, './testFModel_N={0}'.format(N))
+        # model = buildModel(N, tf.float32)
+        # saveModel(model, './testFModel_N={0}'.format(N))

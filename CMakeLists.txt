@@ -21,7 +21,12 @@ set_target_properties(multiply PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set(TENSORFLOW_LIB_DIR "/opt/tensorflow/lib")
 #
 set(TFLIBS ${TENSORFLOW_LIB_DIR}/libtensorflow_cc.so ${TENSORFLOW_LIB_DIR}/libtensorflow_framework.so)
-#set(TFLIBS )
+
+#set(NUMPYINCLUDE /home/connor/.local/lib/python3.9/site-packages/numpy/core/include/numpy )
+#set(PYTHONINCLUDE /usr/include/python3.9 )
+#set(PYTHONLIBS /usr/)
+
+find_package(PythonLibs REQUIRED)
 
 #add_executable(test src/test/test.cpp)
 add_executable(loadmodels src/loadmodels/loadmodels.cpp)
@@ -34,11 +39,13 @@ add_executable(loadmodels_incuda src/loadmodels/loadmodels_incuda.cpp)
 add_executable(test_tcores src/tfcuda/test_tcores.cpp)
 add_executable(test_copy src/tfcuda/test_copy.cpp)
 add_executable(test_tfvscublas src/tfcuda/test_tfvscublas.cpp)
+add_executable(test_tfdelete src/tfcuda/test_tfdelete.cpp)
 add_executable(multigpu src/tfcuda/multigpu.cpp)
 add_executable(test_matrix_hold src/tfcuda/test_matrix_hold.cpp)
 #add_executable(tfcuda_test_matrix_testing src/tfcuda/tfcuda_test_matrix_testing.cpp)
 #add_executable(multiplytest src/tfcuda/multiplytest.cpp)
 add_executable(testmat src/tfcuda/testmat.cu)
+add_executable(cpp_python src/test/cpp_python.cpp)
 #add_executable(threads src/tfcuda/threads.cpp)
 
 
@@ -75,11 +82,18 @@ target_link_libraries(test_copy multiply cublas ${TFLIBS})
 target_include_directories(test_tfvscublas PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(test_tfvscublas multiply cublas ${TFLIBS})
 
+target_include_directories(test_tfdelete PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
+target_link_libraries(test_tfdelete multiply ${TFLIBS})
+
 target_include_directories(multigpu PRIVATE ${CUDA_INCLUDE_DIRS} ${TENSORFLOW_LIB_DIR}/include)
 target_link_libraries(multigpu multiply cublas ${TFLIBS} )
 
 target_include_directories(test_matrix_hold PRIVATE ${CUDA_INCLUDE_DIRS})
 target_link_libraries(test_matrix_hold multiply)
+
+target_include_directories(cpp_python PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(cpp_python ${PYTHON_LIBRARIES})
+
 
 #target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
 #target_link_libraries(tfcuda_test_matrix_testing ${TFLIBS} multiply)
