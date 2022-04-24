@@ -82,12 +82,14 @@ void loadTFModel(struct TFModel* model){
 #else
     std::string _type = "D";
 #endif
-    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
+//    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
 //    std::string PathGraph = "/home/deepsim/Documents/Tensorflow/tfcpp/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
 //    std::string PathGraph = "/home/tfcpp/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
+    std::string PathGraph = "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/54nm/models/symmetric/and2x2_asap7_75t_r/tfmodel_flux/";
 
-    std::string inputLayer = "serving_default_input:0";
-    std::string outputLayer = "PartitionedCall:1";
+//    std::string inputLayer = "serving_default_input:0";
+    std::string inputLayer = "serving_default_input_temperature:0";
+    std::string outputLayer = "PartitionedCall:0";
     std::string matrixLayer = "PartitionedCall:0";
 
     // create a session that takes our
@@ -298,18 +300,23 @@ int main(int argc, char **argv) {
 
     struct TFModel model;
     model.numBatches = 10;
-    model.batchSize = 200;
+    model.batchSize = 2000;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
-    model.inputSize = 1000;
-    model.outputSize = 1000;
+//    model.inputSize = 1000;
+//    model.outputSize = 1000;
+    model.inputSize = 23;
+    model.outputSize = 23;
     loadTFModel(&model);
 
     // load the h_input vector
     vector<DTYPE> h_input(model.numBatches * model.batchSize * model.inputSize);
     for(int i = 0; i < model.batchSize * model.numBatches; i++){
         for(int j = 0; j < model.inputSize; j++){
-            h_input[j + i * model.inputSize] = (DTYPE) 1.0;
+            if (j < 10)
+                h_input[j + i * model.inputSize] = (DTYPE) 1.0;
+            else
+                h_input[j + i * model.inputSize] = (DTYPE) 2.0;
         }
     }
 
