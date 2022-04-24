@@ -82,14 +82,14 @@ void loadTFModel(struct TFModel* model){
 #else
     std::string _type = "D";
 #endif
-//    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
+    std::string PathGraph = "/home/connor/Documents/DeepSim/CUDA/TFCPP/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
 //    std::string PathGraph = "/home/deepsim/Documents/Tensorflow/tfcpp/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
 //    std::string PathGraph = "/home/tfcpp/src/pythonTF/test" + _type + "Model_N=" + std::to_string(numNodes) + "/tfmodel";
-    std::string PathGraph = "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/54nm/models/symmetric/and2x2_asap7_75t_r/tfmodel_flux/";
+//    std::string PathGraph = "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/54nm/models/symmetric/and2x2_asap7_75t_r/tfmodel_flux/";
 
-//    std::string inputLayer = "serving_default_input:0";
-    std::string inputLayer = "serving_default_input_temperature:0";
-    std::string outputLayer = "PartitionedCall:0";
+    std::string inputLayer = "serving_default_input:0";
+//    std::string inputLayer = "serving_default_input_temperature:0";
+    std::string outputLayer = "PartitionedCall:1";
     std::string matrixLayer = "PartitionedCall:0";
 
     // create a session that takes our
@@ -203,8 +203,9 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
     if (!runStatus.ok()) {
         LOG(ERROR) << "Getting matrix failed: " << runStatus;
     }
+
     cudaMemcpy(d_mat, model->outputs[0].flat<DTYPE>().data(),
-               model->inputSize * model->outputSize * sizeof(DTYPE ),
+               model->inputSize * model->outputSize * sizeof(DTYPE),
                cudaMemcpyDeviceToDevice);
 
     // init the handle
@@ -239,7 +240,7 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
         DTYPE *d_output_batch = d_output + i_batch * modelBatchSize;
 
         // run this is the tf model is outputting flux
-        DTYPE *b = model->outputs[0].flat<DTYPE>().data();
+//        DTYPE *b = model->outputs[0].flat<DTYPE>().data();
 //        DTYPE * a = model->outputs[1].flat<DTYPE>().data();
 //        DTYPE * c = model->outputs[2].flat<DTYPE>().data();
 //        gpuPrintf(model->outputs[0].flat<DTYPE>().data(), model->batchSize * model->outputSize);
@@ -280,17 +281,20 @@ void computeOutput(struct TFModel* model, DTYPE * h_input, DTYPE * h_output){
     cudaMemcpy(h_output, d_output, totalOutputN * sizeof(DTYPE), cudaMemcpyDeviceToHost);
 
     DTYPE error = 0.0;
+    DTYPE value = 0.0;
+    DTYPE max_value = 0.0;
     for(int i = 0; i < totalOutputN; i++){
-        error = h_output[i] - h_outputtf[i];
+        error += h_output[i] - h_outputtf[i];
+        value += abs(h_output[i]);
     }
-    printf("\n Total error %f. Avg error %f \n", error, error / totalOutputN);
+    printf("\n Total error %f. Avg error %f. Avg abs value %f\n", error, error / totalOutputN, value / totalOutputN);
 
-    vector<DTYPE> h_mat(50);
-    cudaMemcpy(&h_mat[0], d_mat, 50 * sizeof(DTYPE), cudaMemcpyDeviceToHost);
-    for(int i = 0; i < 50; i++){
-        printf("%f, ", h_mat[i]);
-    }
-    printf("\n");
+//    vector<DTYPE> h_mat(50);
+//    cudaMemcpy(&h_mat[0], d_mat, 50 * sizeof(DTYPE), cudaMemcpyDeviceToHost);
+//    for(int i = 0; i < 50; i++){
+//        printf("%f, ", h_outputtf[i]);
+//    }
+//    printf("\n");
 }
 
 int main(int argc, char **argv) {
@@ -299,14 +303,39 @@ int main(int argc, char **argv) {
     cudaMalloc((void **)& test, 1 * sizeof(int));
 
     struct TFModel model;
-    model.numBatches = 10;
-    model.batchSize = 2000;
-//    model.numBatches = 1*2;
-//    model.batchSize = 2;
-//    model.inputSize = 1000;
-//    model.outputSize = 1000;
-    model.inputSize = 23;
-    model.outputSize = 23;
+
+    for (int i = 0; i < argc; i++){
+        if (strcmp(argv[i], "--numB") == 0){
+            model.numBatches = stoi(argv[i + 1]);
+            i++;
+        }
+        else if (strcmp(argv[i], "--bSize") == 0){
+            model.batchSize = stoi(argv[i + 1]);
+            i++;
+        }
+        else if (strcmp(argv[i], "--modelSize") == 0){
+            model.inputSize = stoi(argv[i + 1]);
+            model.outputSize = stoi(argv[i + 1]);
+            i++;
+        }
+    }
+
+#ifdef useFloat
+    printf("\n using float \n");
+#else
+    printf("\n using double \n");
+#endif
+
+//    model.numBatches = 10;
+//    model.batchSize = 2000;
+//    model.inputSize = 23;
+//    model.outputSize = 23;
+
+    printf("\nRunning with %d batches, %d batch size, %d input and output size\n",
+           model.numBatches,
+           model.batchSize,
+           model.inputSize);
+
     loadTFModel(&model);
 
     // load the h_input vector
@@ -326,23 +355,23 @@ int main(int argc, char **argv) {
     // now run the model
     computeOutput(&model, &h_input[0], &h_output[0]);
 
-    int print_n = 50;
+    int print_n = 10;
     // now print the input and outputs
     DTYPE sum = 0;
-    printf("input:");
+    printf("input: ");
     for(int i = 0; i < print_n; i++){
-        if (i % model.inputSize == 0)
-            printf("\n example:");
+//        if (i % model.inputSize == 0)
+//            printf("\n example:");
         printf("%f, ", h_input[i]);
     }
     printf("\n output:");
     for(int i = 0; i < print_n; i++){
-        if (i % model.outputSize == 0) {
-            printf("\n sum: %f", sum);
-            sum = 0;
-            printf("\n example:");
-        }
-        sum += h_output[i];
+//        if (i % model.outputSize == 0) {
+//            printf("\n sum: %f", sum);
+//            sum = 0;
+//            printf("\n example:");
+//        }
+//        sum += h_output[i];
         printf("%f, ", h_output[i]);
     }
 
