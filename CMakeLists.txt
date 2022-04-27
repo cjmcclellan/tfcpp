@@ -15,6 +15,9 @@ find_package(CUDA REQUIRED)
 add_library(multiply src/tfcuda/multiply.cu)
 set_target_properties(multiply PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+# create octree library
+add_library(octree src/test/octree.cpp)
+
 
 # We installed Tensorflow in /opt/tensorflow - change if you installed elsewhere
 #set(TENSORFLOW_LIB_DIR "/home/deepsim/Documents/Tensorflow/tfinstall")
@@ -27,6 +30,7 @@ set(TFLIBS ${TENSORFLOW_LIB_DIR}/libtensorflow_cc.so ${TENSORFLOW_LIB_DIR}/libte
 #set(PYTHONLIBS /usr/)
 
 find_package(PythonLibs REQUIRED)
+find_package(OpenMP)
 
 #add_executable(test src/test/test.cpp)
 add_executable(loadmodels src/loadmodels/loadmodels.cpp)
@@ -46,6 +50,10 @@ add_executable(test_matrix_hold src/tfcuda/test_matrix_hold.cpp)
 #add_executable(multiplytest src/tfcuda/multiplytest.cpp)
 add_executable(testmat src/tfcuda/testmat.cu)
 add_executable(cpp_python src/test/cpp_python.cpp)
+add_executable(c_python src/test/c_python.c)
+add_executable(nearestNinterp src/test/nearestNinterp.c)
+add_executable(resample src/test/resample.cpp)
+
 #add_executable(threads src/tfcuda/threads.cpp)
 
 
@@ -93,6 +101,16 @@ target_link_libraries(test_matrix_hold multiply)
 
 target_include_directories(cpp_python PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(cpp_python ${PYTHON_LIBRARIES})
+
+target_include_directories(c_python PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(c_python ${PYTHON_LIBRARIES})
+
+target_link_libraries(nearestNinterp PUBLIC OpenMP::OpenMP_CXX m)
+
+target_link_libraries(resample PUBLIC OpenMP::OpenMP_CXX m octree)
+
+MESSAGE(${PYTHON_LIBRARIES})
+MESSAGE(${PYTHON_INCLUDE_DIRS})
 
 
 #target_include_directories(tfcuda_test_matrix_testing PRIVATE ${TENSORFLOW_LIB_DIR}/include ${CUDA_INCLUDE_DIRS})
