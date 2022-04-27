@@ -17,7 +17,7 @@
 #include "memory"
 #include "vector"
 #include "octree.h"
-//#include "ngspice/cktdefs.h"
+
 using namespace std;
 
 #define XSAMPLE 3
@@ -266,7 +266,7 @@ void findNearestNeighbor(struct nearestNDInterp* interp, vector<double>& new_x, 
 
 int arrayArgMin(double* array, int n){
     double min = array[0];
-    int i_min = -1;
+    int i_min = 0;
     for (int i = 0; i < n; i++){
         if (array[i] < min){
             i_min = i;
@@ -278,7 +278,7 @@ int arrayArgMin(double* array, int n){
 
 int arrayArgMax(double* array, int n){
     double max = array[0];
-    int i_max = -1;
+    int i_max = 0;
     for (int i = 0; i < n; i++){
         if (array[i] > max){
             i_max = i;
@@ -333,6 +333,8 @@ void buildOctree(unique_ptr<Octree>& octree, internalTemperatures* internalTemps
 void resample(unsigned int totalNodes, double* temps, double* x, double* y, double* z,
               unsigned int numModels, int* runningSum, unsigned int numUniqueModels, int* modelTypes){
 
+    printf("Before reduction %d nodes, %d models, %d unique models\n", totalNodes, numModels, numUniqueModels);
+
     internalTemperatures internalTemps(x, y, z, temps, totalNodes);
 
     vector<int> new_runningSum;
@@ -359,7 +361,7 @@ void resample(unsigned int totalNodes, double* temps, double* x, double* y, doub
         previous_component = modelTypes[i_component];
         new_modelTypes.push_back(internalTemps.total_reduced_n);
     }
-    printf("reduced to %d nodes", internalTemps.total_reduced_n);
+    printf("reduced to %d nodes\n", internalTemps.total_reduced_n);
 
 }
 
@@ -409,7 +411,6 @@ void loadData(std::string path, unsigned int* totalNodes, double** temps, double
     // close file
     fclose (infile);
 
-    printf("Binary data loaded with %d nodes, %d models, %d unique models\n", *totalNodes, *numModels, *numUniqueModels);
 }
 
 
@@ -417,7 +418,9 @@ int main(int argc, char *argv[]){
     double *temps, *x, *y, *z;
     unsigned int totalNodes, numModels, numUniqueModels;
     int* runningSum, * modelTypes;
-    loadData("/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/gcd/base/gcd_basic3D_netlist_direct_3npl_I_grounded.bin",
+    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_basic3d_netlist_5-3-5_max10fill_I_grounded.bin",
              &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
+//    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
+//             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
     resample(totalNodes, temps, x, y, z, numModels, runningSum, numUniqueModels, modelTypes);
 }

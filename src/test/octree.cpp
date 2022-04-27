@@ -18,6 +18,7 @@ Octree::Octree()
 // Constructor with three arguments
 Octree::Octree(double x, double y, double z, double t)
 {
+    roundPoints(&x, &y, &z);
     // To declare point node
     point = new Point(x, y, z, t);
 }
@@ -29,15 +30,23 @@ Octree::Octree(double x1, double y1, double z1, double x2, double y2, double z2)
 }
 
 // round anything below the margin to zero
-double Octree::round(double x){
-    if (x < margin)
-        return 0;
-    else
-        return x;
+void Octree::round(double* x){
+    if (*x < margin)
+        *x = 0;
+}
+
+// round anything below the margin to zero
+void Octree::roundPoints(double* x, double* y, double* z){
+    round(x);
+    round(y);
+    round(z);
 }
 
 // use this function to init octree after construction
 void Octree::reInit(double x1, double y1, double z1, double x2, double y2, double z2){
+    roundPoints(&x1, &y1, &z1);
+    roundPoints(&x2, &y2, &z2);
+
     // This use to construct Octree
     // with boundaries defined
     if (x2 < x1
@@ -52,6 +61,19 @@ void Octree::reInit(double x1, double y1, double z1, double x2, double y2, doubl
             = new Point(x1, y1, z1, 0.0);
     bottomRightBack
             = new Point(x2, y2, z2, 0.0);
+
+    // get the center point
+    double midx = (topLeftFront->x
+                   + bottomRightBack->x)
+                  / 2;
+    double midy = (topLeftFront->y
+                   + bottomRightBack->y)
+                  / 2;
+    double midz = (topLeftFront->z
+                   + bottomRightBack->z)
+                  / 2;
+    center = new Point(midx, midy, midz, 0.0);
+
 
     // Assigning null to the children
     children.assign(8, nullptr);
@@ -78,7 +100,7 @@ bool Octree::checkBounds(double x, double y, double z){
 // Function to insert a point in the octree
 void Octree::insert(double x, double y, double z, double t)
 {
-
+    roundPoints(&x, &y, &z);
     // If the point already exists in the octree
     if (find(x, y, z)) {
         cout << "Point already exist in the tree" << endl;
@@ -103,29 +125,29 @@ void Octree::insert(double x, double y, double z, double t)
 
     // Checking the octant of
     // the point
-    if (x <= midx) {
-        if (y <= midy) {
-            if (z <= midz)
+    if (x <= center->x) {
+        if (y <= center->y) {
+            if (z <= center->z)
                 pos = TopLeftFront;
             else
                 pos = TopLeftBottom;
         }
         else {
-            if (z <= midz)
+            if (z <= center->z)
                 pos = BottomLeftFront;
             else
                 pos = BottomLeftBack;
         }
     }
     else {
-        if (y <= midy) {
-            if (z <= midz)
+        if (y <= center->y) {
+            if (z <= center->z)
                 pos = TopRightFront;
             else
                 pos = TopRightBottom;
         }
         else {
-            if (z <= midz)
+            if (z <= center->z)
                 pos = BottomRightFront;
             else
                 pos = BottomRightBack;
@@ -294,69 +316,51 @@ bool Octree::find(double x, double y, double z)
     return false;
 }
 
-// Function that returns true if the point
+double Octree::computeDistance(double x1, double x2, double y1, double y2, double z1, double z2){
+    return sqrt((x1 - x2)*(x1 - x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+}
+
+int Octree::findClosestNonStem(double x, double y, double z){
+
+    int pos = -1;
+    double min = -1;
+    double dist = -1.0;
+    for (int i = 0; i < 8; i++){
+        if (children[i]->point == nullptr || children[i]->point->x != -1){
+            if (children[i]->center == nullptr)
+                dist = computeDistance(x, children[i]->point->x,
+                                       y, children[i]->point->y,
+                                       z, children[i]->point->z);
+            else
+                dist = computeDistance(x, children[i]->center->x,
+                                       y, children[i]->center->y,
+                                       z, children[i]->center->z);
+            if (min == -1 || dist < min) {
+                min = dist;
+                pos = i;
+            }
+        }
+    }
+    return pos;
+}
+
+// TODO: This will only go down the tree once. Works well for high density points, but not good for exact nearest neighbor
 // (x, y, z) exists in the octree
 Point* Octree::findNN(double x, double y, double z)
 {
-
+    roundPoints(&x, &y, &z);
     // If point is out of bound
-    if (!checkBounds(x, y, z))
+//    if (!checkBounds(x, y, z))
+//        return nullptr;
+
+    int pos = findClosestNonStem(x, y, z);
+    if (pos == -1){
+        printf("could not find node");
         return nullptr;
-
-    // Otherwise perform binary search
-    // for each ordinate
-    double midx = (topLeftFront->x
-                   + bottomRightBack->x)
-                  / 2;
-    double midy = (topLeftFront->y
-                   + bottomRightBack->y)
-                  / 2;
-    double midz = (topLeftFront->z
-                   + bottomRightBack->z)
-                  / 2;
-
-    int pos = -1;
-
-    // Deciding the position
-    // where to move
-    if (x <= midx) {
-        if (y <= midy) {
-            if (z <= midz)
-                pos = TopLeftFront;
-            else
-                pos = TopLeftBottom;
-        }
-        else {
-            if (z <= midz)
-                pos = BottomLeftFront;
-            else
-                pos = BottomLeftBack;
-        }
     }
-    else {
-        if (y <= midy) {
-            if (z <= midz)
-                pos = TopRightFront;
-            else
-                pos = TopRightBottom;
-        }
-        else {
-            if (z <= midz)
-                pos = BottomRightFront;
-            else
-                pos = BottomRightBack;
-        }
-    }
-
     // If an internal node is encountered
-    if (children[pos]->point == nullptr) {
+    else if (children[pos]->point == nullptr) {
         return children[pos]->findNN(x, y, z);
-    }
-
-    // If an empty node is encountered
-    else if (children[pos]->point->x == -1) {
-        printf("could not find point");
-        return nullptr;
     }
     // else return the point
     else {
@@ -365,6 +369,7 @@ Point* Octree::findNN(double x, double y, double z)
 }
 
 void Octree::findNNs(vector<double>& x, vector<double>& y, vector<double>& z, vector<double>& t){
+    #pragma omp parallel for default(none) shared(x, y, z, t, i)
     for(int i = 0; i < x.size(); i++){
         struct Point* point;
         point = findNN(x[i], y[i], z[i]);
