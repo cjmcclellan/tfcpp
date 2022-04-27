@@ -17,13 +17,14 @@
 #include "memory"
 #include "vector"
 #include "octree.h"
+#include "algorithm"
 
 using namespace std;
 
 #define XSAMPLE 3
 #define YSAMPLE 3
 #define ZSAMPLE 3
-#define IN2D
+//#define IN2D
 
 int arrayArgMax(double* array, int n);
 int arrayArgMin(double* array, int n);
@@ -149,14 +150,20 @@ public:
     vector<double> z_grad;
     vector<double> t;
     int n;
+    double x_min;
+    double x_max ;
+    double y_min ;
+    double y_max ;
+    double z_min ;
+    double z_max ;
 
     Grid(double* x_data, int in_num_x, double* y_data, int in_num_y, double* z_data, int in_num_z, int n){
-        double x_min = x_data[arrayArgMin(x_data, n)];
-        double x_max = x_data[arrayArgMax(x_data, n)];
-        double y_min = y_data[arrayArgMin(y_data, n)];
-        double y_max = y_data[arrayArgMax(y_data, n)];
-        double z_min = z_data[arrayArgMin(z_data, n)];
-        double z_max = z_data[arrayArgMax(z_data, n)];
+        x_min = x_data[arrayArgMin(x_data, n)];
+        x_max = x_data[arrayArgMax(x_data, n)];
+        y_min = y_data[arrayArgMin(y_data, n)];
+        y_max = y_data[arrayArgMax(y_data, n)];
+        z_min = z_data[arrayArgMin(z_data, n)];
+        z_max = z_data[arrayArgMax(z_data, n)];
 
         num_x = in_num_x;
         num_y = in_num_y;
@@ -189,7 +196,7 @@ public:
     }
 
     double getStep(double min, double max, int num){
-        return (max - min) / num;
+        return (max - min) / (num - 1);
     }
 
     void computeGradients(){
@@ -321,7 +328,8 @@ void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& 
 void buildOctree(unique_ptr<Octree>& octree, internalTemperatures* internalTemps){
     // first define the box based on the min and max x, y, z ranges
     octree->reInit(internalTemps->minCurrentX(), internalTemps->minCurrentY(), internalTemps->minCurrentZ(),
-                   internalTemps->maxCurrentX(), internalTemps->maxCurrentY(), internalTemps->maxCurrentZ());
+                   internalTemps->maxCurrentX(), internalTemps->maxCurrentY(), internalTemps->maxCurrentZ(),
+                   internalTemps->current_n);
 
     // now add all the points
     for (int i = 0; i < internalTemps->current_n; i++){
@@ -330,10 +338,21 @@ void buildOctree(unique_ptr<Octree>& octree, internalTemperatures* internalTemps
     }
 }
 
+// update the octree temperatures
+void updateOctree(unique_ptr<Octree>& octree, internalTemperatures* internalTemps){
+    // we need to update the temperature vector with the new temperatures. It is very important that the temperatures
+    // are added in the same order relative to their positions as when building the temperatures.
+    // THERE IS NO CHECK FOR THIS!!!!
+    for (int i = 0; i < internalTemps->current_n; i++) {
+        octree->updateTemperature(i, internalTemps->getCurrentT()[i]);
+    }
+}
+
 void resample(unsigned int totalNodes, double* temps, double* x, double* y, double* z,
               unsigned int numModels, int* runningSum, unsigned int numUniqueModels, int* modelTypes){
 
     printf("Before reduction %d nodes, %d models, %d unique models\n", totalNodes, numModels, numUniqueModels);
+    printf("Max temperatures: %f \n", temps[arrayArgMax(temps, totalNodes)]);
 
     internalTemperatures internalTemps(x, y, z, temps, totalNodes);
 
@@ -354,6 +373,8 @@ void resample(unsigned int totalNodes, double* temps, double* x, double* y, doub
 
             if (i_model == previous_component)
                 buildOctree(octree, &internalTemps);
+            else
+                updateOctree(octree, &internalTemps);
 
             resampleComponent(&internalTemps, octree);
             new_runningSum.push_back(internalTemps.total_reduced_n);

@@ -21,14 +21,14 @@ struct Point {
     double x;
     double y;
     double z;
-    double t;
+    double* pt;
     Point()
-            : x(-1), y(-1), z(-1), t(0.0)
+            : x(-1), y(-1), z(-1), pt(nullptr)
     {
     }
 
-    Point(double a, double b, double c, double d)
-            : x(a), y(b), z(c), t(d)
+    Point(double a, double b, double c, double* d)
+            : x(a), y(b), z(c), pt(d)
     {
     }
 };
@@ -43,20 +43,25 @@ class Octree {
     Point *center;
     Point *offset;
 
-    double margin = 1e-20;
+    std::vector<double> temps;
+    int i_temp = 0;
+    const double margin = 1e-20;
 
     // Represent the boundary of the cube
     Point *topLeftFront, *bottomRightBack;
     std::vector<Octree *> children;
+private:
+    void _insert(double x, double y, double z, double* pt);
 
 public:
     Octree();
-    Octree(double x, double y, double z, double t);
+    Octree(double x, double y, double z, double* pt);
     Octree(double x1, double y1, double z1, double x2, double y2, double z2);
     void insert(double x, double y, double z, double t);
     bool find(double x, double y, double z);
-    void reInit(double x1, double y1, double z1, double x2, double y2, double z2);
+    void reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n);
     void round(double* x);
+    void updateTemperature(int i, double t);
     void roundPoints(double* x, double* y, double* z);
     int findClosestNonStem(double x, double y, double z);
     Point* findNN(double x, double y, double z);

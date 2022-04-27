@@ -16,17 +16,17 @@ Octree::Octree()
 }
 
 // Constructor with three arguments
-Octree::Octree(double x, double y, double z, double t)
+Octree::Octree(double x, double y, double z, double* pt)
 {
     roundPoints(&x, &y, &z);
     // To declare point node
-    point = new Point(x, y, z, t);
+    point = new Point(x, y, z, pt);
 }
 
 // Constructor with six arguments
 Octree::Octree(double x1, double y1, double z1, double x2, double y2, double z2)
 {
-    reInit(x1, y1, z1, x2, y2, z2);
+    reInit(x1, y1, z1, x2, y2, z2, 0);
 }
 
 // round anything below the margin to zero
@@ -43,7 +43,10 @@ void Octree::roundPoints(double* x, double* y, double* z){
 }
 
 // use this function to init octree after construction
-void Octree::reInit(double x1, double y1, double z1, double x2, double y2, double z2){
+void Octree::reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n){
+
+    temps.resize(n);
+
     roundPoints(&x1, &y1, &z1);
     roundPoints(&x2, &y2, &z2);
 
@@ -58,9 +61,9 @@ void Octree::reInit(double x1, double y1, double z1, double x2, double y2, doubl
 
     point = nullptr;
     topLeftFront
-            = new Point(x1, y1, z1, 0.0);
+            = new Point(x1, y1, z1, nullptr);
     bottomRightBack
-            = new Point(x2, y2, z2, 0.0);
+            = new Point(x2, y2, z2, nullptr);
 
     // get the center point
     double midx = (topLeftFront->x
@@ -72,7 +75,7 @@ void Octree::reInit(double x1, double y1, double z1, double x2, double y2, doubl
     double midz = (topLeftFront->z
                    + bottomRightBack->z)
                   / 2;
-    center = new Point(midx, midy, midz, 0.0);
+    center = new Point(midx, midy, midz, nullptr);
 
 
     // Assigning null to the children
@@ -97,8 +100,16 @@ bool Octree::checkBounds(double x, double y, double z){
     return true;
 }
 
-// Function to insert a point in the octree
-void Octree::insert(double x, double y, double z, double t)
+// insert called from outside
+void Octree::insert(double x, double y, double z, double t){
+
+    temps[i_temp] = t;
+    _insert(x, y, z, &(temps[i_temp]));
+    i_temp++;
+}
+
+// Private function to insert a point in the octree
+void Octree::_insert(double x, double y, double z, double* pt)
 {
     roundPoints(&x, &y, &z);
     // If the point already exists in the octree
@@ -156,21 +167,21 @@ void Octree::insert(double x, double y, double z, double t)
 
     // If an internal node is encountered
     if (children[pos]->point == nullptr) {
-        children[pos]->insert(x, y, z, t);
+        children[pos]->_insert(x, y, z, pt);
         return;
     }
 
     // If an empty node is encountered
     else if (children[pos]->point->x == -1) {
         delete children[pos];
-        children[pos] = new Octree(x, y, z, t);
+        children[pos] = new Octree(x, y, z, pt);
         return;
     }
     else {
         double x_ = children[pos]->point->x,
                 y_ = children[pos]->point->y,
                 z_ = children[pos]->point->z,
-                t_ = children[pos]->point->t;
+                *pt_ = children[pos]->point->pt;
         delete children[pos];
         children[pos] = nullptr;
         if (pos == TopLeftFront) {
@@ -238,8 +249,8 @@ void Octree::insert(double x, double y, double z, double t)
                                        bottomRightBack->y,
                                        bottomRightBack->z);
         }
-        children[pos]->insert(x_, y_, z_, t_);
-        children[pos]->insert(x, y, z, t);
+        children[pos]->_insert(x_, y_, z_, pt_);
+        children[pos]->_insert(x, y, z, pt);
     }
 }
 
@@ -368,12 +379,14 @@ Point* Octree::findNN(double x, double y, double z)
     }
 }
 
+void Octree::updateTemperature(int i, double t){
+    temps[i] = t;
+}
+
 void Octree::findNNs(vector<double>& x, vector<double>& y, vector<double>& z, vector<double>& t){
-    #pragma omp parallel for default(none) shared(x, y, z, t, i)
+//    #pragma omp parallel for default(shared)
     for(int i = 0; i < x.size(); i++){
-        struct Point* point;
-        point = findNN(x[i], y[i], z[i]);
-        t[i] = point->t;
+        t[i] = *(findNN(x[i], y[i], z[i])->pt);
     }
 }
 
