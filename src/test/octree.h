@@ -40,7 +40,7 @@ class Octree {
     // if point == (-1, -1, -1), node is empty.
     Point *point;
 
-    Point *center;
+    Point *center = nullptr;
     Point *offset;
 
     std::vector<double> temps;
@@ -52,20 +52,23 @@ class Octree {
     std::vector<Octree *> children;
 private:
     void _insert(double x, double y, double z, double* pt);
-
-public:
-    Octree();
-    Octree(double x, double y, double z, double* pt);
-    Octree(double x1, double y1, double z1, double x2, double y2, double z2);
-    void insert(double x, double y, double z, double t);
-    bool find(double x, double y, double z);
-    void reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n);
     void round(double* x);
-    void updateTemperature(int i, double t);
+    void removeOffset(double* x, double* y, double* z);
     void roundPoints(double* x, double* y, double* z);
     int findClosestNonStem(double x, double y, double z);
     Point* findNN(double x, double y, double z);
     double computeDistance(double x1, double x2, double y1, double y2, double z1, double z2);
-    void findNNs(std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, std::vector<double>& t);
     bool checkBounds(double x, double y, double z);
+    Octree(double x, double y, double z, double* pt);
+    Octree(double x1, double y1, double z1, double x2, double y2, double z2);
+    bool find(double x, double y, double z);
+    void _reInit(double x1, double y1, double z1, double x2, double y2, double z2);
+
+public:
+    Octree();
+    void insert(double x, double y, double z, double t);
+    void reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n);
+    void adjustOffset(double x, double y, double z);
+    void updateTemperature(int i, double t);
+    void findNNs(std::vector<double>& x, std::vector<double>& y, std::vector<double>& z, std::vector<double>& t);
 };

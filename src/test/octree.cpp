@@ -13,6 +13,7 @@ Octree::Octree()
 {
     // To declare empty node
     point = new Point();
+    center = nullptr;
 }
 
 // Constructor with three arguments
@@ -21,18 +22,26 @@ Octree::Octree(double x, double y, double z, double* pt)
     roundPoints(&x, &y, &z);
     // To declare point node
     point = new Point(x, y, z, pt);
+    center = nullptr;
 }
 
 // Constructor with six arguments
 Octree::Octree(double x1, double y1, double z1, double x2, double y2, double z2)
 {
-    reInit(x1, y1, z1, x2, y2, z2, 0);
+    _reInit(x1, y1, z1, x2, y2, z2);
 }
 
 // round anything below the margin to zero
 void Octree::round(double* x){
     if (*x < margin)
         *x = 0;
+}
+
+// Remove the offset from new points
+void Octree::removeOffset(double* x, double* y, double* z){
+    *x = *x - offset->x;
+    *y = *y - offset->y;
+    *z = *z - offset->z;
 }
 
 // round anything below the margin to zero
@@ -42,15 +51,36 @@ void Octree::roundPoints(double* x, double* y, double* z){
     round(z);
 }
 
-// use this function to init octree after construction
-void Octree::reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n){
+void Octree::adjustOffset(double x, double y, double z) {
+    offset->x = x;
+    offset->y = y;
+    offset->z = z;
+}
+
+void Octree::reInit(double x1, double y1, double z1, double x2, double y2, double z2, int n) {
+    offset = new Point();
 
     temps.resize(n);
 
     roundPoints(&x1, &y1, &z1);
     roundPoints(&x2, &y2, &z2);
 
-    // This use to construct Octree
+    // set the offset
+    adjustOffset(x1, y1, z1);
+
+    // now adjust the points
+    removeOffset(&x1, &y1, &z1);
+    removeOffset(&x2, &y2, &z2);
+
+    _reInit(x1, y1, z1, x2, y2, z2);
+
+}
+
+// use this function to init octree after construction
+void Octree::_reInit(double x1, double y1, double z1, double x2, double y2, double z2){
+
+
+    // This uses to construct Octree
     // with boundaries defined
     if (x2 < x1
         || y2 < y1
@@ -77,7 +107,6 @@ void Octree::reInit(double x1, double y1, double z1, double x2, double y2, doubl
                   / 2;
     center = new Point(midx, midy, midz, nullptr);
 
-
     // Assigning null to the children
     children.assign(8, nullptr);
     for (int i = TopLeftFront;
@@ -103,6 +132,9 @@ bool Octree::checkBounds(double x, double y, double z){
 // insert called from outside
 void Octree::insert(double x, double y, double z, double t){
 
+    // remove the offset
+    removeOffset(&x, &y, &z);
+
     temps[i_temp] = t;
     _insert(x, y, z, &(temps[i_temp]));
     i_temp++;
@@ -123,14 +155,14 @@ void Octree::_insert(double x, double y, double z, double* pt)
 
     // Binary search to insert the point
     double midx = (topLeftFront->x
-                + bottomRightBack->x)
-               / 2;
+                   + bottomRightBack->x)
+                  / 2;
     double midy = (topLeftFront->y
-                + bottomRightBack->y)
-               / 2;
+                   + bottomRightBack->y)
+                  / 2;
     double midz = (topLeftFront->z
-                + bottomRightBack->z)
-               / 2;
+                   + bottomRightBack->z)
+                  / 2;
 
     int pos = -1;
 
@@ -171,7 +203,7 @@ void Octree::_insert(double x, double y, double z, double* pt)
         return;
     }
 
-    // If an empty node is encountered
+        // If an empty node is encountered
     else if (children[pos]->point->x == -1) {
         delete children[pos];
         children[pos] = new Octree(x, y, z, pt);
@@ -265,14 +297,14 @@ bool Octree::find(double x, double y, double z)
     // Otherwise perform binary search
     // for each ordinate
     double midx = (topLeftFront->x
-                + bottomRightBack->x)
-               / 2;
+                   + bottomRightBack->x)
+                  / 2;
     double midy = (topLeftFront->y
-                + bottomRightBack->y)
-               / 2;
+                   + bottomRightBack->y)
+                  / 2;
     double midz = (topLeftFront->z
-                + bottomRightBack->z)
-               / 2;
+                   + bottomRightBack->z)
+                  / 2;
 
     int pos = -1;
 
@@ -356,10 +388,8 @@ int Octree::findClosestNonStem(double x, double y, double z){
 }
 
 // TODO: This will only go down the tree once. Works well for high density points, but not good for exact nearest neighbor
-// (x, y, z) exists in the octree
 Point* Octree::findNN(double x, double y, double z)
 {
-    roundPoints(&x, &y, &z);
     // If point is out of bound
 //    if (!checkBounds(x, y, z))
 //        return nullptr;
@@ -386,31 +416,13 @@ void Octree::updateTemperature(int i, double t){
 void Octree::findNNs(vector<double>& x, vector<double>& y, vector<double>& z, vector<double>& t){
 //    #pragma omp parallel for default(shared)
     for(int i = 0; i < x.size(); i++){
-        t[i] = *(findNN(x[i], y[i], z[i])->pt);
+        // round points and remove any offset
+        double xp = x[i];
+        double yp = y[i];
+        double zp = z[i];
+        roundPoints(&xp, &yp, &zp);
+        removeOffset(&xp, &yp, &zp);
+        t[i] = *(findNN(xp, yp, zp)->pt);
     }
 }
 
-// Driver code
-//int main()
-//{
-//    Octree tree(1, 1, 1, 5, 5, 5);
-//
-//    tree.insert(1, 2, 3, 1.0);
-//    tree.insert(1, 2, 3, 1.0);
-//    tree.insert(6, 5, 5, 1.0);
-//
-//    cout << (tree.find(1, 2, 3)
-//             ? "Found\n"
-//             : "Not Found\n");
-//
-//    cout << (tree.find(3, 4, 4)
-//             ? "Found\n"
-//             : "Not Found\n");
-//    tree.insert(3, 4, 4, 1.0);
-//
-//    cout << (tree.find(3, 4, 4)
-//             ? "Found\n"
-//             : "Not Found\n");
-//
-//    return 0;
-//}
