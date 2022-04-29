@@ -20,17 +20,21 @@
 #include "algorithm"
 
 using namespace std;
-
+#define NNODESTYPE unsigned int
 #define XSAMPLE 3
 #define YSAMPLE 3
 #define ZSAMPLE 3
+
+#define XRESAMPLE 20
+#define YRESAMPLE 5
+#define ZRESAMPLE 5
 //#define IN2D
 
 int arrayArgMax(double* array, int n);
 int arrayArgMin(double* array, int n);
 
-extern "C" void resample(unsigned int totalNodes, double** temps, double** x, double** y, double** z,
-                         unsigned int numModels, int** runningSum, unsigned int numUniqueModels, int** modelTypes);
+extern "C" void resample(NNODESTYPE* totalNodes, double** temps, double** x, double** y, double** z,
+                         unsigned int* numModels, int** runningSum, unsigned int* numUniqueModels, int** modelTypes);
 
 struct nearestNDInterp {
     double* x;
@@ -156,8 +160,12 @@ public:
     double y_max ;
     double z_min ;
     double z_max ;
+    double minDistance;
 
-    Grid(double* x_data, int in_num_x, double* y_data, int in_num_y, double* z_data, int in_num_z, int n){
+    Grid(double* x_data, int in_num_x, double* y_data, int in_num_y, double* z_data, int in_num_z,
+         int n, double minDistance){
+        this->minDistance = minDistance;
+
         x_min = x_data[arrayArgMin(x_data, n)];
         x_max = x_data[arrayArgMax(x_data, n)];
         y_min = y_data[arrayArgMin(y_data, n)];
@@ -169,19 +177,21 @@ public:
         num_y = in_num_y;
         num_z = in_num_z;
 
+
+        tie(x_step, num_x) = getStep(x_min, x_max, num_x);
+        tie(y_step, num_y) = getStep(y_min, y_max, num_y);
+        tie(z_step, num_z) = getStep(z_min, z_max, num_z);
+
+#ifdef IN2D
+        z_min = 0.0;
+        z_step = 0.0;
+#endif
         this->n = num_x * num_y * num_z;
         this->x.resize(this->n);
         this->y.resize(this->n);
         this->z.resize(this->n);
         this->t.resize(this->n);
 
-        x_step = getStep(x_min, x_max, num_x);
-        y_step = getStep(y_min, y_max, num_y);
-        z_step = getStep(z_min, z_max, num_z);
-#ifdef IN2D
-        z_min = 0.0;
-        z_step = 0.0;
-#endif
         int i = 0;
         for (int i_x = 0; i_x < num_x; i_x++){
             for (int i_y = 0; i_y < num_y; i_y++) {
@@ -195,8 +205,14 @@ public:
         }
     }
 
-    double getStep(double min, double max, int num){
-        return (max - min) / (num - 1);
+    pair<double, int> getStep(double min, double max, int num){
+        if (num < 2)
+            return make_pair(max - min, 2);
+        // get the step but make sure it's not below the minDistance
+        double step = (max - min) / (num - 1);
+        if (step < minDistance)
+            return getStep(min, max, floor(1 + (max - min) / minDistance));
+        return make_pair(step, num);
     }
 
     void computeGradients(){
@@ -219,18 +235,18 @@ public:
         }
     }
 
-    bool checkGrad(double gradThreshold=5.0){
+    bool checkGrad(double minThreshold=5.0){
 
         for(double val : x_grad){
-            if (val > gradThreshold)
+            if (val > minThreshold)
                 return true;
         }
         for(double val : y_grad){
-            if (val > gradThreshold)
+            if (val > minThreshold)
                 return true;
         }
         for(double val : z_grad){
-            if (val > gradThreshold)
+            if (val > minThreshold)
                 return true;
         }
         return false;
@@ -296,7 +312,8 @@ int arrayArgMax(double* array, int n){
 }
 
 
-void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& octree, double gradThreshold){
+void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& octree,
+                       double gradThreshold, double minDistance){
 //    struct nearestNDInterp interp;
 //    createNearestNDInterp(&interp,
 //                          internalTemps->getCurrentX(),
@@ -308,9 +325,7 @@ void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& 
     Grid grid(internalTemps->getCurrentX(), XSAMPLE,
               internalTemps->getCurrentY(), YSAMPLE,
               internalTemps->getCurrentZ(), ZSAMPLE,
-              internalTemps->current_n);
-
-//    findNearestNeighbor(&interp, grid.x, grid.y, grid.z, grid.t, grid.n);
+              internalTemps->current_n, minDistance);
 
     octree->findNNs(grid.x, grid.y, grid.z, grid.t);
 
@@ -318,7 +333,14 @@ void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& 
     grid.computeGradients();
 
     if (grid.checkGrad(gradThreshold)){
-        internalTemps->copyOldToReducedData();
+        Grid newGrid(internalTemps->getCurrentX(), XRESAMPLE,
+                     internalTemps->getCurrentY(), YRESAMPLE,
+                     internalTemps->getCurrentZ(), ZRESAMPLE,
+                     internalTemps->current_n, minDistance);
+
+        octree->findNNs(newGrid.x, newGrid.y, newGrid.z, newGrid.t);
+        internalTemps->updateReducedData(newGrid.x, newGrid.y, newGrid.z, newGrid.t);
+//        internalTemps->copyOldToReducedData();
     }
     else{
         internalTemps->updateReducedData(grid.x, grid.y, grid.z, grid.t);
@@ -349,12 +371,12 @@ void updateOctree(unique_ptr<Octree>& octree, internalTemperatures* internalTemp
     }
 }
 
-void resample(unsigned int* totalNodes, double** temps, double** x, double** y, double** z,
+void resample(NNODESTYPE* totalNodes, double** temps, double** x, double** y, double** z,
               unsigned int* numModels, int** runningSum, unsigned int* numUniqueModels, int** modelTypes){
 
     double maxTemp = (*temps)[arrayArgMax(*temps, *totalNodes)];
-    double gradThreshold = maxTemp * 0.01;
-    double minDistance = 0.005;
+    double gradThreshold = maxTemp * 0.05;
+    double minDistance = 0.05;
 
     printf("Before reduction %d nodes, %d models, %d unique models\n", *totalNodes, *numModels, *numUniqueModels);
     printf("Max temperatures: %f and using %f grad threshold\n", maxTemp, gradThreshold);
@@ -364,14 +386,14 @@ void resample(unsigned int* totalNodes, double** temps, double** x, double** y, 
 
     vector<int> new_runningSum;
     new_runningSum.push_back(0);
-    vector<int> new_modelTypes;
+//    vector<int> new_modelTypes;
 //    new_modelTypes.push_back(0);
 
     int previous_component = 0;
     for (int i_component = 0; i_component < *numUniqueModels; i_component++){
         // for each unique component, create an octree with the relative positions
         unique_ptr<Octree> octree(new Octree());
-        for (int i_model = previous_component; i_model < (*modelTypes)[i_component]; i_model++){
+        for (int i_model = previous_component; i_model < (*modelTypes)[i_component] - 1; i_model++){
             int start = (*runningSum)[i_model];
             int end = (*runningSum)[i_model + 1];
             internalTemps.current_start = start;
@@ -382,7 +404,7 @@ void resample(unsigned int* totalNodes, double** temps, double** x, double** y, 
             else
                 updateOctree(octree, &internalTemps);
 
-            resampleComponent(&internalTemps, octree, gradThreshold);
+            resampleComponent(&internalTemps, octree, gradThreshold, minDistance);
             new_runningSum.push_back(internalTemps.total_reduced_n);
         }
         previous_component = (*modelTypes)[i_component];
@@ -412,6 +434,7 @@ void resample(unsigned int* totalNodes, double** temps, double** x, double** y, 
 }
 
 
+
 int * readintarray(FILE * infile, int length){
     size_t size = sizeof(int) * length;
     auto array = (int *) malloc(size);
@@ -427,7 +450,7 @@ double * readdoublearray(FILE * infile, int length){
 }
 
 
-void loadData(std::string path, unsigned int* totalNodes, double** temps, double** x, double** y, double** z,
+void loadData(std::string path, NNODESTYPE* totalNodes, double** temps, double** x, double** y, double** z,
               unsigned int* numModels, int** runningSum, unsigned int* numUniqueModels, int** modelTypes){
 // open the file
     FILE *infile;
@@ -441,7 +464,7 @@ void loadData(std::string path, unsigned int* totalNodes, double** temps, double
     }
 
     // read in the header info from the file
-    fread(totalNodes, sizeof(unsigned int), 1, infile);
+    fread(totalNodes, sizeof(NNODESTYPE), 1, infile);
 
     *temps = readdoublearray(infile, *totalNodes);
     *x = readdoublearray(infile, *totalNodes);
@@ -462,10 +485,13 @@ void loadData(std::string path, unsigned int* totalNodes, double** temps, double
 
 int main(int argc, char *argv[]){
     double *temps, *x, *y, *z;
-    unsigned int totalNodes, numModels, numUniqueModels;
+    NNODESTYPE totalNodes;
+    unsigned int numModels, numUniqueModels;
     int* runningSum, * modelTypes;
-    loadData("/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
+    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_basic3d_netlist_5-3-5_max10fill_I_grounded_bfresample.bin",
              &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
+//    loadData("/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
+//             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
 //    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
 //             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
     resample(&totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels,
