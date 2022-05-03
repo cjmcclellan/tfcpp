@@ -232,34 +232,41 @@ void computeOutput(struct TFModel* model, double * h_input, double * h_output, i
     cudaDeviceSynchronize();
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
+    printf("running GPU: %d\n", GPUid);
+    std::cout << "at time: "
+              << std::chrono::time_point_cast<std::chrono::microseconds>(begin).time_since_epoch().count() << std::endl;
+
     for (int i_batch = 0; i_batch < model->numBatches; i_batch++) {
         status = cudaGetLastError () ;
 
         double * d_input_batch = d_input + i_batch * modelBatchSize;
-        std::cout << "GPUid " << GPUid << std::endl;
+//        std::cout << "GPUid " << GPUid << std::endl;
 
-        if (i_batch == 0) {
-            // copy the input to the input tensor
-            cudaDCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
-            status = cudaGetLastError();
+        // copy the input to the input tensor
+        cudaDCopy(model->input_tensor.flat<double>().data(), d_input_batch, modelBatchSize);
+        status = cudaGetLastError();
 
-            // run the graph to get the output conductances
-            tensorflow::Status runStatus = model->session->RunCallable(model->call, {model->input_tensor},
-                                                                       &(model->outputs), nullptr);
-            if (!runStatus.ok()) {
-                LOG(ERROR) << "Running model failed: " << runStatus;
-            }
+        // run the graph to get the output conductances
+        tensorflow::Status runStatus = model->session->RunCallable(model->call, {model->input_tensor},
+                                                                   &(model->outputs), nullptr);
+        if (!runStatus.ok()) {
+            LOG(ERROR) << "Running model failed: " << runStatus;
         }
+
         // get this output batches by indexing d_output
         double *d_output_batch = d_output + i_batch * modelBatchSize;
 
         // now run a cuda blas on the output tensors
-        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
-                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
+//        runMatMultiply(d_input_batch, 1, model->outputs[0].flat<double>().data(), model->inputSize,
+//                       d_output_batch, model->inputSize, model->batchSize, true, &handle);
     }
 
     cudaDeviceSynchronize();
-//    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    printf("running GPU: %d\n", GPUid);
+    std::cout << "ending: "
+              << std::chrono::time_point_cast<std::chrono::microseconds>(end).time_since_epoch().count() << std::endl;
+
 //    std::cout << "Run took = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
 
     cudaMemcpy(h_output, d_output, totalOutputN * sizeof(double), cudaMemcpyDeviceToHost);
@@ -270,16 +277,22 @@ int main(int argc, char **argv) {
 
     struct TFModel model1;
     struct TFModel model2;
-    model1.numBatches = 32 * 32;
-    model1.batchSize = 20000;
+    model1.numBatches = 1000;
+    model1.batchSize = 2000;
 //    model.numBatches = 1*2;
 //    model.batchSize = 2;
-    model1.inputSize = 24;
-    model1.outputSize = 24;
-    std::string PathGraph1 = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
+    model1.inputSize = 191;
+    model1.outputSize = 191;
+    model2.numBatches = 1000;
+    model2.batchSize = 2000;
+//    model.numBatches = 1*2;
+//    model.batchSize = 2;
+    model2.inputSize = 191;
+    model2.outputSize = 191;
+    std::string PathGraph1 = "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_10x/tfmodel";
     loadTFModel(&model1, PathGraph1, 2);
 
-    std::string PathGraph2 = "/home/deepsim/Documents/SPICE/DSSpice/src/deepsim/models/24input_cube_1k/tfmodel";
+    std::string PathGraph2 = "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_10x/tfmodel";
     loadTFModel(&model2, PathGraph2, 1);
 
     // load the h_input vector
@@ -288,7 +301,7 @@ int main(int argc, char **argv) {
         for(int j = 0; j < model1.inputSize; j++){
 //            h_input[j + i * model.inputSize] = (double) j * i;
             if (j < 13)
-                h_input[j + i * model1.inputSize] = 0;
+                h_input[j + i * model1.inputSize] = 0.5;
             else
                 h_input[j + i * model1.inputSize] = 1;
 
@@ -300,12 +313,12 @@ int main(int argc, char **argv) {
     int d = 500;
     // now run the model
 //    cudaSetDevice(0);
-//    std::thread th1(computeOutput, &model1, &h_input[0], &h_output[0], 1);
-    std::thread th1(basicCuda, 0, &h_output[0], d);
+    std::thread th1(computeOutput, &model1, &h_input[0], &h_output[0], 1);
+//    std::thread th1(basicCuda, 1, &h_output[0], d);
 
 //    cudaSetDevice(1);
-//    std::thread th2(computeOutput, &model2, &h_input[0], &h_output[0], 0);
-    std::thread th2(basicCuda, 1, &h_output[0], d);
+    std::thread th2(computeOutput, &model2, &h_input[0], &h_output[0], 0);
+//    std::thread th2(basicCuda, 0, &h_output[0], d);
 
     th1.join();
     th2.join();

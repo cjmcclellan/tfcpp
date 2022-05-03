@@ -92,7 +92,7 @@ void loadTFModel(struct TFModel* model, std::string PathGraph){
 
     std::string inputLayer = "serving_default_input_temperature:0";
 //    std::string inputLayerFlux = "serving_default_input_temperature:0";
-    std::string outputLayer = "PartitionedCall:3";
+    std::string outputLayer = "PartitionedCall:0";
 //    std::string matrixLayer = "PartitionedCall:0";
 
     // create a session that takes our
@@ -270,14 +270,16 @@ void runTFModel(){
     model1.batchSize = 10;
 //    model1.inputSize = 191;
 //    model1.outputSize = 191;
-    model1.inputSize = 351;
-    model1.outputSize = 351;
+//    model1.inputSize = 351;
+//    model1.outputSize = 351;
+    model1.inputSize = 639;
+    model1.outputSize = 45653;
 //    model2.numBatches = 10;
 //    model2.batchSize = 10;
 //    model2.inputSize = 191;
 //    model2.outputSize = 191;
 //    loadTFModel(&model1, "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_10x/tfmodel");
-    loadTFModel(&model1, "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_20x/tfmodel");
+    loadTFModel(&model1, "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/aes/3d_54nm/models/symmetric/ckinvdcx20_asap7_75t_r_l1/tfmodel");
     runModel(&model1);
 //    deleteTFModel(&model1);
 //    loadTFModel(&model2, "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_20x/tfmodel");
