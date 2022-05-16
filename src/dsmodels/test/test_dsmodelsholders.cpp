@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 //    auto pmodel = testLoading<PowerDSModel, double>(powerModelPath, 2);
 //    testRun(pmodel);
 
-    auto fluxmodel = testLoadingFlux<GreensDSModel, double>(powerModelPath, 1000);
+    auto fluxmodel = testLoadingFlux<GreensDSModel, double>(powerModelPath, 100);
     testRunFlux(fluxmodel);
 
     return 0;
