@@ -4,24 +4,24 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include <stdio.h>
+#include "iostream"
+#include "string"
 //#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 //#include "/home/connor/.local/lib/python3.9/site-packages/numpy/core/include/numpy/arrayobject.h"
 //#include "arrayobject.h"
 
 int main(int argc, char *argv[]){
-    PyObject *pName, *pModule, *pDict, *pFunc, *pArgs, *pValue;
+    PyObject *pName, *pModule, *pModule2, *pFunc, *pArgs;
+//
 //
     Py_Initialize();
 //
-//    pName = PyUnicode_FromString("cpp_python");
-    PyObject *sys_path = PySys_GetObject("path");
-    PyList_Append(sys_path, PyUnicode_FromString("/home/connor/Documents/DeepSim/CUDA/TFCPP/src/test"));
+    PyRun_SimpleString("import sys");
+    PyRun_SimpleString("print(sys.path)");
+    pModule = PyImport_ImportModule("deepsimhelper.test");
+    pFunc = PyObject_GetAttrString(pModule, "runtest");
 
-    pModule = PyImport_ImportModule("cpp_python");
-    pFunc = PyObject_GetAttrString(pModule, "runTest");
-
-    size_t size = 50000000;
-//    double* array = (double*) malloc(size * sizeof(double));
+    size_t size = 5;
 
     PyObject *l = PyList_New(size);
     for (size_t i = 0; i != size; i++){
@@ -29,7 +29,6 @@ int main(int argc, char *argv[]){
         PyList_SET_ITEM(l, i, PyFloat_FromDouble(a));
     }
 
-//    pArgs = Py_BuildValue("(o)", l);
     pArgs = PyTuple_Pack(1, l);
     if (PyCallable_Check (pFunc))
     {

@@ -1,4 +1,4 @@
-# Install script for directory: /home/deepsim/Documents/Tensorflow/tfcpp
+# Install script for directory: /home/connor/Documents/DeepSim/CUDA/TFCPP
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/deepsim/Documents/Tensorflow/tfcpp/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/connor/Documents/DeepSim/CUDA/TFCPP/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -281,7 +281,7 @@ void runTFModel(){
 //    loadTFModel(&model1, "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_10x/tfmodel");
     loadTFModel(&model1, "/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/asapmodels/aes/3d_54nm/models/symmetric/ckinvdcx20_asap7_75t_r_l1/tfmodel");
     runModel(&model1);
-//    deleteTFModel(&model1);
+    deleteTFModel(&model1);
 //    loadTFModel(&model2, "/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/asapmodels/3d_54nm/models/symmetric/fillerxp5_asap7_75t_r_20x/tfmodel");
 //    runModel(&model2);
     printf("hello");

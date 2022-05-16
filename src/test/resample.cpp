@@ -20,7 +20,7 @@
 #include "algorithm"
 
 using namespace std;
-#define NNODESTYPE unsigned int
+#define NNODESTYPE long long
 #define XSAMPLE 3
 #define YSAMPLE 3
 #define ZSAMPLE 3
@@ -311,7 +311,7 @@ int arrayArgMax(double* array, int n){
     return i_max;
 }
 
-
+// TODO: create cell too (simple triangle connections for uniform gird
 void resampleComponent(internalTemperatures* internalTemps, unique_ptr<Octree>& octree,
                        double gradThreshold, double minDistance){
 //    struct nearestNDInterp interp;
@@ -488,10 +488,10 @@ int main(int argc, char *argv[]){
     NNODESTYPE totalNodes;
     unsigned int numModels, numUniqueModels;
     int* runningSum, * modelTypes;
-    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_basic3d_netlist_5-3-5_max10fill_I_grounded_bfresample.bin",
-             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
-//    loadData("/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
+//    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_basic3d_netlist_5-3-5_max10fill_I_grounded_bfresample.bin",
 //             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
+    loadData("/home/connor/Documents/DeepSim/AI/thermal-nn-tests/data/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded_preresample.bin",
+             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
 //    loadData("/home/deepsim/Documents/SPICE/designs/OpenRoadDesigns/asap7/gcd/base/gcd_netlist_fine_54nm_I_current_internal_grounded.bin",
 //             &totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels, &modelTypes);
     resample(&totalNodes, &temps, &x, &y, &z, &numModels, &runningSum, &numUniqueModels,
